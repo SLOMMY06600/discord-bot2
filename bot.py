@@ -410,7 +410,7 @@ async def avatar(ctx, member: discord.Member = None):
 
     member = member or ctx.author
 
-    embed = discord.Embed(title="🖼 Avatar")
+    embed = discord.Embed(title="Avatar")
     embed.set_image(url=member.display_avatar.url)
 
     await ctx.send(embed=embed)
@@ -420,7 +420,7 @@ async def userinfo(ctx, member: discord.Member = None):
 
     member = member or ctx.author
 
-    embed = discord.Embed(title="👤 User Info")
+    embed = discord.Embed(title="User Info")
     embed.add_field(name="Nom", value=member.name)
     embed.add_field(name="ID", value=member.id)
     embed.add_field(name="Créé le", value=member.created_at.strftime("%Y-%m-%d"))
@@ -432,7 +432,7 @@ async def serverinfo(ctx):
 
     guild = ctx.guild
 
-    embed = discord.Embed(title="🏠 Server Info")
+    embed = discord.Embed(title="Server Info")
     embed.add_field(name="Nom", value=guild.name)
     embed.add_field(name="Membres", value=guild.member_count)
     embed.add_field(name="Owner", value=guild.owner)
@@ -459,6 +459,45 @@ async def deluser(ctx, member: discord.Member):
 
     await ctx.channel.set_permissions(member, overwrite=None)
     await ctx.send(f"{member.mention} à été retiré du ticket")
+
+import aiohttp
+import discord
+from discord.ext import commands
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def botpic(ctx, url: str = None):
+
+    if url is None:
+        return await ctx.send("Tu dois mettre un lien d'image")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    return await ctx.send("Image invalide")
+
+                img = await resp.read()
+                await bot.user.edit(avatar=img)
+
+        await ctx.send(Avatar du bot changé")
+
+    except:
+        await ctx.send("Erreur lors du changement d'avatar")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def botname(ctx, *, name: str = None):
+
+    if name is None:
+        return await ctx.send("❌ Tu dois mettre un nom")
+
+    try:
+        await bot.user.edit(username=name)
+        await ctx.send(f"✅ Nom du bot changé en **{name}**")
+
+    except:
+        await ctx.send("❌ Impossible de changer le nom (limite Discord)")
 
 # ======================
 # HELP
@@ -517,6 +556,19 @@ async def help(ctx):
     ),
     inline=False
     ) 
+
+    embed.add_field(
+    name="🤖 BOT CONFIG",
+    value=(
+        "```yaml\n"
+        "+botpic url      → Changer l’avatar du bot\n"
+        "+botname name    → Changer le nom du bot\n"
+        "+botbanner url   → Changer la bannière du bot\n"
+        "```"
+    ),
+    inline=False
+    
+    )
 
 
     embed.add_field(
