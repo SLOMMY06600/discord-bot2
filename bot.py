@@ -4,6 +4,7 @@ import datetime
 import io
 import json
 import os
+import aiohttp
 owners = []
 
 OWNERS_FILE = "owners.json"
@@ -400,6 +401,20 @@ async def ownerlist(ctx):
         mentions.append(user.mention)
 
     await ctx.send("**Owners bot :**\n" + "\n".join(mentions))
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def botname(ctx, *, name=None):
+
+    if name is None:
+        return await ctx.send(f"{ctx.author.mention} tu dois donner un nom")
+
+    try:
+        await bot.user.edit(username=name)
+        await ctx.send(f"Nom du bot changé en **{name}**")
+
+    except discord.HTTPException:
+        await ctx.send("Impossible de changer le nom (limite Discord)")
 
 # ======================
 # NEW COMMANDS
