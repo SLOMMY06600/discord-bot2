@@ -595,6 +595,120 @@ async def help(ctx):
 
     await ctx.send(embed=embed)
 
+class HelpView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.page = 0
+
+    def get_pages(self):
+
+        page1 = discord.Embed(
+            title="📖 HELP - PAGE 1/3",
+            description="🎫 Tickets & 🧰 Utilitaires",
+            color=discord.Color.blurple()
+        )
+
+        page1.add_field(
+            name="🎫 Tickets",
+            value=(
+                "**+ticket**\nOuvre le menu des tickets\n\n"
+                "**+config**\nConfigure les tickets\n\n"
+                "**+adduser**\nAjoute un utilisateur au ticket\n\n"
+                "**+deluser**\nRetire un utilisateur du ticket\n\n"
+                "**+rename**\nRenomme le salon"
+            ),
+            inline=False
+        )
+
+        page1.add_field(
+            name="🧰 Utilitaires",
+            value=(
+                "**+avatar**\nAffiche un avatar\n"
+                "**+userinfo**\nInfos utilisateur\n"
+                "**+serverinfo**\nInfos serveur\n"
+                "**+say**\nFait parler le bot"
+            ),
+            inline=False
+        )
+
+        page2 = discord.Embed(
+            title="📖 HELP - PAGE 2/3",
+            description="🛡️ Modération",
+            color=discord.Color.green()
+        )
+
+        page2.add_field(
+            name="🛡️ Modération",
+            value=(
+                "**+kick**\nExpulse un membre\n\n"
+                "**+ban**\nBannit un membre\n\n"
+                "**+unban**\nDébannit un utilisateur\n\n"
+                "**+clear**\nSupprime des messages\n\n"
+                "**+addrole**\nAjoute un rôle\n\n"
+                "**+delrole**\nRetire un rôle\n\n"
+                "**+lock**\nVerrouille un salon\n\n"
+                "**+unlock**\nDéverrouille un salon\n\n"
+                "**+mute**\nMute un membre\n\n"
+                "**+unmute**\nUnmute un membre"
+            ),
+            inline=False
+        )
+
+        page3 = discord.Embed(
+            title="📖 HELP - PAGE 3/3",
+            description="👑 Owner & Bot",
+            color=discord.Color.gold()
+        )
+
+        page3.add_field(
+            name="👑 Owner",
+            value=(
+                "**+owner**\nAjoute un owner bot\n"
+                "**+unowner**\nRetire un owner bot\n"
+                "**+ownerlist**\nListe des owners"
+            ),
+            inline=False
+        )
+
+        page3.add_field(
+            name="🤖 Bot",
+            value=(
+                "**+botname**\nChange le nom du bot\n"
+                "**+botpic**\nChange l’avatar du bot"
+            ),
+            inline=False
+        )
+
+        return [page1, page2, page3]
+
+    async def update(self, interaction):
+        pages = self.get_pages()
+        await interaction.response.edit_message(embed=pages[self.page], view=self)
+
+    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.secondary)
+    async def back(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if self.page > 0:
+            self.page -= 1
+
+        await self.update(interaction)
+
+    @discord.ui.button(label="➡️", style=discord.ButtonStyle.secondary)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        if self.page < 2:
+            self.page += 1
+
+        await self.update(interaction)
+
+@bot.command()
+async def help(ctx):
+
+    view = HelpView()
+    pages = view.get_pages()
+
+    await ctx.send(embed=pages[0], view=view)
+
 # ======================
 # RUN
 # ======================
