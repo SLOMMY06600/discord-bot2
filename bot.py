@@ -557,7 +557,7 @@ async def help(ctx):
     inline=False
     ) 
 
-embed.add_field(
+    embed.add_field(
     name="🤖 BOT",
     value=(
         "```yaml\n"
@@ -569,23 +569,6 @@ embed.add_field(
     ),
     inline=False
     )
-
-
-    embed.add_field(
-        name="📊 UTILITAIRES",
-        value=(
-            "```yaml\n"
-            "+avatar [user]\n"
-            "+userinfo [user]\n"
-            "+serverinfo\n"
-            "```"
-        ),
-        inline=False
-    )
-
-    embed.set_footer(text=f"Demandé par {ctx.author}", icon_url=ctx.author.display_avatar)
-
-    await ctx.send(embed=embed)
 
 # ======================
 # RUN
