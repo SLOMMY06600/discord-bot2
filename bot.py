@@ -522,6 +522,11 @@ async def deluser(ctx, member: discord.Member):
 @bot.command()
 async def help(ctx):
 
+    view = HelpView()
+    pages = view.get_pages()
+
+    await ctx.send(embed=pages[0], view=view)
+
     embed = discord.Embed(
         title="MENU D'AIDE",
         description="Commandes du bot organisées par catégories",
@@ -703,12 +708,7 @@ class HelpView(discord.ui.View):
 
 @bot.command()
 async def help(ctx):
-
-    view = HelpView()
-    pages = view.get_pages()
-
-    await ctx.send(embed=pages[0], view=view)
-
+    
 # ======================
 # RUN
 # ======================
