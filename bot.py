@@ -499,44 +499,6 @@ async def deluser(ctx, member: discord.Member):
     await ctx.channel.set_permissions(member, overwrite=None)
     await ctx.send(f"{member.mention} à été retiré du ticket")
 
-import aiohttp
-import discord
-from discord.ext import commands
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def botpic(ctx, url: str = None):
-
-    if url is None:
-        return await ctx.send("Tu dois mettre un lien d'image")
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status != 200:
-                    return await ctx.send("Image invalide")
-
-                img = await resp.read()
-                await bot.user.edit(avatar=img)
-
-        await ctx.send("Avatar du bot changé")
-
-    except:
-        await ctx.send("Erreur lors du changement d'avatar")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def botname(ctx, *, name: str = None):
-
-    if name is None:
-        return await ctx.send("❌ Tu dois mettre un nom")
-
-    try:
-        await bot.user.edit(username=name)
-        await ctx.send(f"✅ Nom du bot changé en **{name}**")
-
-    except:
-        await ctx.send("❌ Impossible de changer le nom (limite Discord)")
 
 # ======================
 # HELP
