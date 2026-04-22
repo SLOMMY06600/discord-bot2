@@ -416,6 +416,30 @@ async def botname(ctx, *, name=None):
     except discord.HTTPException:
         await ctx.send("Impossible de changer le nom (limite Discord)")
 
+import aiohttp
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def botpic(ctx, url=None):
+
+    if url is None:
+        return await ctx.send(f"{ctx.author.mention} tu dois mettre un lien d'image")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+
+                if resp.status != 200:
+                    return await ctx.send("Image invalide")
+
+                data = await resp.read()
+                await bot.user.edit(avatar=data)
+
+        await ctx.send("Avatar du bot changé")
+
+    except:
+        await ctx.send("Erreur lors du changement d'avatar")
+
 # ======================
 # NEW COMMANDS
 # ======================
