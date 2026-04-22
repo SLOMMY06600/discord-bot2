@@ -166,7 +166,7 @@ class TicketView(discord.ui.View):
 async def ticket(ctx):
 
     embed = discord.Embed(
-        title="🎫 Tickets",
+        title="🎫 Tickets.                       ",
         description="Ouvre un ticket avec le menu",
         color=discord.Color.blue()
     )
@@ -179,7 +179,7 @@ async def ticket(ctx):
 
 class ConfigView(discord.ui.View):
 
-    @discord.ui.button(label="➕ Ajouter", style=discord.ButtonStyle.success)
+    @discord.ui.button(label="Ajouter", style=discord.ButtonStyle.success)
     async def add(self, interaction, button):
 
         await interaction.response.send_message("Nom :", ephemeral=True)
@@ -191,9 +191,9 @@ class ConfigView(discord.ui.View):
 
         ticket_options.append({"name": msg.content, "category_id": None})
 
-        await interaction.followup.send("✅ Ajouté", ephemeral=True)
+        await interaction.followup.send("Ajouté", ephemeral=True)
 
-    @discord.ui.button(label="❌ Supprimer", style=discord.ButtonStyle.danger)
+    @discord.ui.button(label="Supprimer", style=discord.ButtonStyle.danger)
     async def delete(self, interaction, button):
 
         await interaction.response.send_message(
@@ -208,11 +208,11 @@ class ConfigView(discord.ui.View):
 
         try:
             ticket_options.pop(int(msg.content))
-            await interaction.followup.send("❌ supprimé", ephemeral=True)
+            await interaction.followup.send("supprimé", ephemeral=True)
         except:
-            await interaction.followup.send("❌ erreur", ephemeral=True)
+            await interaction.followup.send("erreur", ephemeral=True)
 
-    @discord.ui.button(label="📁 Assigner", style=discord.ButtonStyle.secondary)
+    @discord.ui.button(label="Assigner", style=discord.ButtonStyle.secondary)
     async def assign(self, interaction, button):
 
         text = "\n".join([f"{i} → {t['name']}" for i, t in enumerate(ticket_options)])
@@ -232,14 +232,14 @@ class ConfigView(discord.ui.View):
 
             ticket_options[int(idx)]["category_id"] = int(cat)
 
-            await interaction.followup.send("✅ assigné", ephemeral=True)
+            await interaction.followup.send("assigné", ephemeral=True)
         except:
-            await interaction.followup.send("❌ erreur", ephemeral=True)
+            await interaction.followup.send("erreur", ephemeral=True)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def config(ctx):
-    await ctx.send("⚙️ CONFIG", view=ConfigView())
+    await ctx.send("Cnfiguration Ticket", view=ConfigView())
 
 # ======================
 # MODERATION (inchangé)
@@ -411,10 +411,10 @@ async def botname(ctx, *, name=None):
 
     try:
         await bot.user.edit(username=name)
-        await ctx.send(f"✅ Nom du bot changé en **{name}**")
+        await ctx.send(f"Nom du bot changé en **{name}**")
 
     except discord.HTTPException:
-        await ctx.send("❌ Impossible de changer le nom (limite Discord)")
+        await ctx.send("Impossible de changer le nom (limite Discord)")
 
 import aiohttp
 
@@ -430,15 +430,28 @@ async def botpic(ctx, url=None):
             async with session.get(url) as resp:
 
                 if resp.status != 200:
-                    return await ctx.send("❌ Image invalide")
+                    return await ctx.send("Image invalide")
 
                 data = await resp.read()
                 await bot.user.edit(avatar=data)
 
-        await ctx.send("✅ Avatar du bot changé")
+        await ctx.send("Avatar du bot changé")
 
     except:
-        await ctx.send("❌ Erreur lors du changement d'avatar")
+        await ctx.send("Erreur lors du changement d'avatar")
+
+@bot.command()
+async def say(ctx, *, message=None):
+    if message is None:
+        await ctx.send("Tu dois écrire un message !")
+        return
+
+    try:
+        await ctx.message.delete()
+    except:
+        pass
+
+    await ctx.send(message)
 
 # ======================
 # NEW COMMANDS
@@ -449,7 +462,7 @@ async def avatar(ctx, member: discord.Member = None):
 
     member = member or ctx.author
 
-    embed = discord.Embed(title="🖼 Avatar")
+    embed = discord.Embed(title="Avatar")
     embed.set_image(url=member.display_avatar.url)
 
     await ctx.send(embed=embed)
@@ -459,7 +472,7 @@ async def userinfo(ctx, member: discord.Member = None):
 
     member = member or ctx.author
 
-    embed = discord.Embed(title="👤 User Info")
+    embed = discord.Embed(title="User Info")
     embed.add_field(name="Nom", value=member.name)
     embed.add_field(name="ID", value=member.id)
     embed.add_field(name="Créé le", value=member.created_at.strftime("%Y-%m-%d"))
@@ -471,7 +484,7 @@ async def serverinfo(ctx):
 
     guild = ctx.guild
 
-    embed = discord.Embed(title="🏠 Server Info")
+    embed = discord.Embed(title="Server Info")
     embed.add_field(name="Nom", value=guild.name)
     embed.add_field(name="Membres", value=guild.member_count)
     embed.add_field(name="Owner", value=guild.owner)
@@ -507,13 +520,13 @@ async def deluser(ctx, member: discord.Member):
 async def help(ctx):
 
     embed = discord.Embed(
-        title="📖 MENU D'AIDE",
+        title="MENU D'AIDE",
         description="Commandes du bot organisées par catégories",
         color=discord.Color.blurple()
     )
 
     embed.add_field(
-        name="🎫 TICKETS",
+        name="TICKETS",
         value=(
             "```yaml\n"
             "+ticket\n"
@@ -527,7 +540,7 @@ async def help(ctx):
     )
 
     embed.add_field(
-        name="🛠 MODÉRATION",
+        name="MODÉRATION",
         value=(
             "```yaml\n"
             "+kick\n"
@@ -546,7 +559,7 @@ async def help(ctx):
     )
 
     embed.add_field(
-        name="👑 OWNER",
+        name="OWNER",
         value=(
             "```yaml\n"
             "+owner\n"
@@ -558,7 +571,7 @@ async def help(ctx):
     )
 
     embed.add_field(
-        name="📊 UTILITAIRES",
+        name="UTILITAIRES",
         value=(
             "```yaml\n"
             "+avatar\n"
