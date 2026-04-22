@@ -1,6 +1,25 @@
+
 import discord
 from discord.ext import commands
+import datetime
+import io
+import json
 import os
+owners = []
+
+OWNERS_FILE = "owners.json"
+
+def load_owners():
+    if os.path.exists(OWNERS_FILE):
+        with open(OWNERS_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_owners():
+    with open(OWNERS_FILE, "w") as f:
+        json.dump(owners, f)
+
+owners = load_owners()
 
 # ======================
 # INTENTS
@@ -10,138 +29,19 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix=".", intents=intents)
+bot = commands.Bot(command_prefix="+", intents=intents, help_command=None)
 
 # ======================
 # CONFIG
 # ======================
 
-ADDROLE_PERMISSION_ID = 1493037666768523479
-DELROLE_PERMISSION_ID = 1493037710082965585
-
-PROTECTED_ROLES = [
-    1493039967365103716
+ticket_options = [
+    {"name": "🛠 Support", "category_id": None},
+    {"name": "🐞 Bug", "category_id": None},
+    {"name": "❓ Autre", "category_id": None}
 ]
 
-LOG_CHANNEL_ID = 1496244094970761356  # ID salon logs
-
-# ======================
-# LOG SYSTEM
-# ======================
-
-async def send_log(guild, message, mention=None):
-    channel = guild.get_channel(1496244094970761356)
-    if channel:
-        content = f"{mention} | {message}" if mention else message
-        await channel.send(content)
-
-# ======================
-# ADDROLE
-# ======================
-
-@bot.command()
-async def addrole(ctx, member: discord.Member, role: discord.Role):
-
-    if not any(r.id == ADDROLE_PERMISSION_ID for r in ctx.author.roles):
-        return await ctx.send("pas la permission")
-
-    if role >= ctx.author.top_role:
-        return await ctx.send("role trop haut")
-
-    if role >= ctx.guild.me.top_role:
-        return await ctx.send("role trop haut pour le bot")
-
-    try:
-        await member.add_roles(role)
-        await ctx.send("role ajoute")
-
-        await send_log(
-            ctx.guild,
-            f"➕ rôle ajouté : {role.name} par {ctx.author}",
-            member.mention
-        )
-
-    except discord.Forbidden:
-        await ctx.send("je n'ai pas la permission")
-
-# ======================
-# DELROLE
-# ======================
-
-@bot.command()
-async def delrole(ctx, member: discord.Member, role: discord.Role):
-
-    if not any(r.id == DELROLE_PERMISSION_ID for r in ctx.author.roles):
-        return await ctx.send("pas la permission")
-
-    if role.id in PROTECTED_ROLES:
-        return await ctx.send("ce role est protege")
-
-    if role >= ctx.author.top_role:
-        return await ctx.send("role trop haut")
-
-    try:
-        await member.remove_roles(role)
-        await ctx.send("role retire")
-
-        await send_log(
-            ctx.guild,
-            f"➖ rôle retiré : {role.name} par {ctx.author}",
-            member.mention
-        )
-
-    except discord.Forbidden:
-        await ctx.send("je n'ai pas la permission")
-
-# ======================
-# DERANK + RAISON
-# ======================
-
-@bot.command()
-async def derank(ctx, member: discord.Member, *, reason: str = "Aucune raison fournie"):
-
-    if member.top_role >= ctx.author.top_role:
-        return await ctx.send("impossible de derank ce membre")
-
-    roles_to_remove = []
-
-    for role in member.roles:
-
-        if role == ctx.guild.default_role:
-            continue
-
-        if role.id in PROTECTED_ROLES:
-            continue
-
-        if role < ctx.author.top_role:
-            roles_to_remove.append(role)
-
-    if not roles_to_remove:
-        return await ctx.send("aucun role a retirer")
-
-    try:
-        await member.remove_roles(*roles_to_remove)
-        await ctx.send(f"{member.mention} a ete derank")
-
-        await send_log(
-            ctx.guild,
-            f"🚫 derank | roles retirés: {len(roles_to_remove)} | raison: {reason}",
-            member.mention
-        )
-
-    except discord.Forbidden:
-        await ctx.send("je n'ai pas la permission")
-
-# ======================
-# ERROR HANDLER
-# ======================
-
-@bot.event
-async def on_command_error(ctx, error):
-    await send_log(
-        ctx.guild,
-        f"⚠️ erreur commande {ctx.command} par {ctx.author} | {error}"
-    )
+LOG_CHANNEL_ID = 1496568287415505069
 
 # ======================
 # READY
@@ -149,7 +49,1031 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_ready():
-    print(f"connecte en tant que {bot.user}")
+    print(f"Connecté : {bot.user}")
+
+# ======================
+# TRANSCRIPT
+# ======================
+
+async def create_transcript(channel):
+    messages = []
+
+    async for msg in channel.history(oldest_first=True):
+        time = msg.created_at.strftime("%Y-%m-%d %H:%M")
+        messages.append(f"[{time}] {msg.author}: {msg.content}")
+
+    return discord.File(
+        fp=io.BytesIO("\n".join(messages).encode()),
+        filename=f"transcript-{channel.name}.txt"
+    )
+
+# ======================
+# TICKET CONTROLS
+# ======================
+
+class TicketControls(discord.ui.View):
+
+    @discord.ui.button(label="📌 Claim", style=discord.ButtonStyle.primary)
+    async def claim(self, interaction, button):
+
+        await interaction.response.send_message(
+            f"📌 Ticket pris par {interaction.user.mention}"
+        )
+
+    @discord.ui.button(label="🔒 Fermer", style=discord.ButtonStyle.danger)
+    async def close(self, interaction, button):
+
+        await interaction.response.send_message("🔒 Fermeture...", ephemeral=True)
+
+        file = await create_transcript(interaction.channel)
+
+        log = interaction.guild.get_channel(LOG_CHANNEL_ID)
+        if log:
+            await log.send(file=file)
+
+        await interaction.channel.delete()
+
+# ======================
+# CREATE TICKET
+# ======================
+
+async def create_ticket(interaction, index):
+
+    await interaction.response.defer(ephemeral=True)
+
+    guild = interaction.guild
+    user = interaction.user
+    data = ticket_options[index]
+
+    category = None
+    if data["category_id"]:
+        category = discord.utils.get(guild.categories, id=data["category_id"])
+
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(view_channel=False),
+        user: discord.PermissionOverwrite(view_channel=True),
+        guild.me: discord.PermissionOverwrite(view_channel=True),
+    }
+
+    channel = await guild.create_text_channel(
+        name=f"ticket-{user.name}".lower(),
+        category=category,
+        overwrites=overwrites
+    )
+
+    embed = discord.Embed(
+        title="🎫 Ticket ouvert",
+        description=(
+            f"Ticket ouvert par {user.mention}\n\n"
+            "Merci d'avoir contacté le support\n"
+            "Décrivez votre problème puis attendez une réponse"
+        ),
+        color=discord.Color.green()
+    )
+
+    await channel.send(embed=embed, view=TicketControls())
+
+    await interaction.followup.send(f"✅ Ticket créé : {channel.mention}", ephemeral=True)
+
+# ======================
+# MENU TICKETS
+# ======================
+
+class TicketMenu(discord.ui.Select):
+
+    def __init__(self):
+
+        options = [
+            discord.SelectOption(label=t["name"], value=str(i))
+            for i, t in enumerate(ticket_options)
+        ]
+
+        super().__init__(placeholder="Ouvrir un ticket...", options=options)
+
+    async def callback(self, interaction):
+        await create_ticket(interaction, int(self.values[0]))
+
+class TicketView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(TicketMenu())
+
+# ======================
+# PANEL
+# ======================
+
+@bot.command()
+async def ticket(ctx):
+
+    embed = discord.Embed(
+        title="🎫 Tickets",
+        description="Ouvre un ticket avec le menu",
+        color=discord.Color.blue()
+    )
+
+    await ctx.send(embed=embed, view=TicketView())
+
+# ======================
+# CONFIG
+# ======================
+
+class ConfigView(discord.ui.View):
+
+    @discord.ui.button(label="➕ Ajouter", style=discord.ButtonStyle.success)
+    async def add(self, interaction, button):
+
+        await interaction.response.send_message("Nom :", ephemeral=True)
+
+        def check(m):
+            return m.author.id == interaction.user.id
+
+        msg = await bot.wait_for("message", check=check)
+
+        ticket_options.append({"name": msg.content, "category_id": None})
+
+        await interaction.followup.send("✅ Ajouté", ephemeral=True)
+
+    @discord.ui.button(label="❌ Supprimer", style=discord.ButtonStyle.danger)
+    async def delete(self, interaction, button):
+
+        await interaction.response.send_message(
+            "\n".join([f"{i} → {t['name']}" for i, t in enumerate(ticket_options)]),
+            ephemeral=True
+        )
+
+        def check(m):
+            return m.author.id == interaction.user.id
+
+        msg = await bot.wait_for("message", check=check)
+
+        try:
+            ticket_options.pop(int(msg.content))
+            await interaction.followup.send("❌ supprimé", ephemeral=True)
+        except:
+            await interaction.followup.send("❌ erreur", ephemeral=True)
+
+    @discord.ui.button(label="📁 Assigner", style=discord.ButtonStyle.secondary)
+    async def assign(self, interaction, button):
+
+        text = "\n".join([f"{i} → {t['name']}" for i, t in enumerate(ticket_options)])
+
+        await interaction.response.send_message(
+            f"{text}\nFormat: index | id_categorie",
+            ephemeral=True
+        )
+
+        def check(m):
+            return m.author.id == interaction.user.id
+
+        msg = await bot.wait_for("message", check=check)
+
+        try:
+            idx, cat = msg.content.split("|")
+
+            ticket_options[int(idx)]["category_id"] = int(cat)
+
+            await interaction.followup.send("✅ assigné", ephemeral=True)
+        except:
+            await interaction.followup.send("❌ erreur", ephemeral=True)
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def config(ctx):
+    await ctx.send("⚙️ CONFIG", view=ConfigView())
+
+# ======================
+# MODERATION (inchangé)
+# ======================
+
+@bot.command()
+async def kick(ctx, member: discord.Member):
+
+    try:
+        await member.kick()
+        await ctx.send(f"{member.mention} a bien été kick du serveur")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour kick ce membre")
+
+@bot.command()
+async def ban(ctx, member: discord.Member):
+
+    try:
+        await member.ban()
+        await ctx.send(f"{member.mention} a bien été ban du serveur")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour ban ce membre")
+
+@bot.command()
+async def unban(ctx, user_id: int):
+
+    try:
+        user = await bot.fetch_user(user_id)
+        await ctx.guild.unban(user)
+        await ctx.send(f"{user.mention} a été unban du serveur")
+
+    except discord.NotFound:
+        await ctx.send("Utilisateur introuvable")
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour unban")
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def clear(ctx, amount: int):
+
+    if amount <= 0:
+        return await ctx.send("Tu dois mettre un nombre supérieur à 0")
+
+    deleted = await ctx.channel.purge(limit=amount + 1)
+
+    await ctx.send(f"{len(deleted)-1} messages supprimés", delete_after=5)
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def addrole(ctx, member: discord.Member, role: discord.Role):
+
+    try:
+        await member.add_roles(role)
+        await ctx.send(f"{member.mention} a reçu le rôle **{role.name}**")
+    except:
+        await ctx.send("Impossible d'ajouter ce rôle")
+
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def delrole(ctx, member: discord.Member, role: discord.Role):
+
+    try:
+        await member.remove_roles(role)
+        await ctx.send(f"Le rôle **{role.name}** a été retiré à {member.mention}")
+    except:
+        await ctx.send("Impossible de retirer ce rôle")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def lock(ctx):
+
+    overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
+    overwrite.send_messages = False
+    await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+
+    await ctx.send("Ce salon est désormais verrouillé")
+
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def unlock(ctx):
+
+    overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
+    overwrite.send_messages = True
+    await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+
+    await ctx.send("Ce salon est de nouveau ouvert")
+
+@bot.command()
+@commands.has_permissions(moderate_members=True)
+async def mute(ctx, member: discord.Member, minutes: int):
+
+    try:
+        duration = discord.utils.utcnow() + datetime.timedelta(minutes=minutes)
+        await member.timeout(duration)
+
+        await ctx.send(f"{member.mention} est mute pendant {minutes} minutes")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour mute cette personne")
+
+
+@bot.command()
+@commands.has_permissions(moderate_members=True)
+async def unmute(ctx, member: discord.Member):
+
+    try:
+        await member.timeout(None)
+
+        await ctx.send(f"{member.mention} a été unmute")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour unmute cette personne")
+
+@bot.command()
+async def owner(ctx, member: discord.Member):
+
+    if ctx.author.id != ctx.guild.owner_id:
+        return await ctx.send("Seul le owner du serveur peut faire ça")
+
+    if member.id in owners:
+        return await ctx.send(f"{member.mention} est déjà owner bot")
+
+    owners.append(member.id)
+    save_owners()
+
+    await ctx.send(f"{member.mention} est maintenant owner bot")
+
+@bot.check
+async def global_owner_check(ctx):
+    return ctx.author.id in owners or ctx.author.id == ctx.guild.owner_id
+
+@bot.command()
+async def unowner(ctx, member: discord.Member):
+
+    if ctx.author.id != ctx.guild.owner_id:
+        return await ctx.send("Seul le owner du serveur peut faire ça")
+
+    if member.id not in owners:
+        return await ctx.send(f"{member.mention} n'est pas owner bot")
+
+    owners.remove(member.id)
+    save_owners()
+
+    await ctx.send(f"{member.mention} n'est plus owner bot")
+
+@bot.command()
+async def ownerlist(ctx):
+
+    if not owners:
+        return await ctx.send("Aucun owner")
+
+    mentions = []
+    for user_id in owners:
+        user = await bot.fetch_user(user_id)
+        mentions.append(user.mention)
+
+    await ctx.send("**Owners bot :**\n" + "\n".join(mentions))
+
+# ======================
+# NEW COMMANDS
+# ======================
+
+@bot.command()
+async def avatar(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(title="🖼 Avatar")
+    embed.set_image(url=member.display_avatar.url)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def userinfo(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(title="👤 User Info")
+    embed.add_field(name="Nom", value=member.name)
+    embed.add_field(name="ID", value=member.id)
+    embed.add_field(name="Créé le", value=member.created_at.strftime("%Y-%m-%d"))
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def serverinfo(ctx):
+
+    guild = ctx.guild
+
+    embed = discord.Embed(title="🏠 Server Info")
+    embed.add_field(name="Nom", value=guild.name)
+    embed.add_field(name="Membres", value=guild.member_count)
+    embed.add_field(name="Owner", value=guild.owner)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def adduser(ctx, member: discord.Member):
+
+    await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
+    await ctx.send(f"{member.mention} à été ajouté au ticket")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def rename(ctx, *, name):
+
+    await ctx.channel.edit(name=name)
+    await ctx.send(f"Le ticket à été renommé en {name}")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def deluser(ctx, member: discord.Member):
+
+    await ctx.channel.set_permissions(member, overwrite=None)
+    await ctx.send(f"{member.mention} à été retiré du ticket")
+
+# ======================
+# HELP
+# ======================
+
+@bot.command()
+async def help(ctx):
+
+    embed = discord.Embed(
+        title="📖 MENU D'AIDE",
+        description="Commandes du bot organisées par catégories",
+        color=discord.Color.blurple()
+    )
+
+    embed.add_field(
+        name="🎫 TICKETS",
+        value=(
+            "```yaml\n"
+            "+ticket      → Ouvrir un ticket\n"
+            "+config      → Config tickets\n"
+            "+adduser     → Ajouter utilisateur\n"
+            "+deluser     → Retirer utilisateur\n"
+            "+rename      → Renommer ticket\n"
+            "```"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+    name="🛠 MODÉRATION",
+    value=(
+        "```yaml\n"
+        "+kick @user          → Expulser un membre\n"
+        "+ban @user           → Bannir un membre\n"
+        "+unban id            → Débannir un membre\n"
+        "+clear <nombre>      → Supprimer des messages\n"
+        "+addrole @u @r       → Ajouter un rôle\n"
+        "+delrole @u @r       → Retirer un rôle\n"
+        "+lock                → Verrouiller le salon\n"
+        "+unlock              → Déverrouiller le salon\n"
+        "+mute @user min      → Mute un membre (minutes)\n"
+        "+unmute @user        → Enlever le mute\n"
+        "```"
+    ),
+    inline=False 
+    )
+
+    embed.add_field(
+    name="👑 OWNER SYSTEM",
+    value=(
+        "```yaml\n"
+        "+owner @user     → Donner les droits owner bot\n"
+        "+unowner @user   → Retirer owner\n"
+        "+ownerlist       → Voir les owners\n"
+        "```"
+    ),
+    inline=False
+    ) 
+
+
+    embed.add_field(
+        name="📊 UTILITAIRES",
+        value=(
+            "```yaml\n"
+            "+avatar [user]\n"
+            "+userinfo [user]\n"
+            "+serverinfo\n"
+            "```"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text=f"Demandé par {ctx.author}", icon_url=ctx.author.display_avatar)
+
+    await ctx.send(embed=embed)
+
+# ======================
+# RUN
+import discord
+from discord.ext import commands
+import datetime
+import io
+import json
+import os
+owners = []
+
+OWNERS_FILE = "owners.json"
+
+def load_owners():
+    if os.path.exists(OWNERS_FILE):
+        with open(OWNERS_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_owners():
+    with open(OWNERS_FILE, "w") as f:
+        json.dump(owners, f)
+
+owners = load_owners()
+
+# ======================
+# INTENTS
+# ======================
+
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+
+bot = commands.Bot(command_prefix="+", intents=intents, help_command=None)
+
+# ======================
+# CONFIG
+# ======================
+
+ticket_options = [
+    {"name": "🛠 Support", "category_id": None},
+    {"name": "🐞 Bug", "category_id": None},
+    {"name": "❓ Autre", "category_id": None}
+]
+
+LOG_CHANNEL_ID = 1496568287415505069
+
+# ======================
+# READY
+# ======================
+
+@bot.event
+async def on_ready():
+    print(f"Connecté : {bot.user}")
+
+# ======================
+# TRANSCRIPT
+# ======================
+
+async def create_transcript(channel):
+    messages = []
+
+    async for msg in channel.history(oldest_first=True):
+        time = msg.created_at.strftime("%Y-%m-%d %H:%M")
+        messages.append(f"[{time}] {msg.author}: {msg.content}")
+
+    return discord.File(
+        fp=io.BytesIO("\n".join(messages).encode()),
+        filename=f"transcript-{channel.name}.txt"
+    )
+
+# ======================
+# TICKET CONTROLS
+# ======================
+
+class TicketControls(discord.ui.View):
+
+    @discord.ui.button(label="📌 Claim", style=discord.ButtonStyle.primary)
+    async def claim(self, interaction, button):
+
+        await interaction.response.send_message(
+            f"📌 Ticket pris par {interaction.user.mention}"
+        )
+
+    @discord.ui.button(label="🔒 Fermer", style=discord.ButtonStyle.danger)
+    async def close(self, interaction, button):
+
+        await interaction.response.send_message("🔒 Fermeture...", ephemeral=True)
+
+        file = await create_transcript(interaction.channel)
+
+        log = interaction.guild.get_channel(LOG_CHANNEL_ID)
+        if log:
+            await log.send(file=file)
+
+        await interaction.channel.delete()
+
+# ======================
+# CREATE TICKET
+# ======================
+
+async def create_ticket(interaction, index):
+
+    await interaction.response.defer(ephemeral=True)
+
+    guild = interaction.guild
+    user = interaction.user
+    data = ticket_options[index]
+
+    category = None
+    if data["category_id"]:
+        category = discord.utils.get(guild.categories, id=data["category_id"])
+
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(view_channel=False),
+        user: discord.PermissionOverwrite(view_channel=True),
+        guild.me: discord.PermissionOverwrite(view_channel=True),
+    }
+
+    channel = await guild.create_text_channel(
+        name=f"ticket-{user.name}".lower(),
+        category=category,
+        overwrites=overwrites
+    )
+
+    embed = discord.Embed(
+        title="🎫 Ticket ouvert",
+        description=(
+            f"Ticket ouvert par {user.mention}\n\n"
+            "Merci d'avoir contacté le support\n"
+            "Décrivez votre problème puis attendez une réponse"
+        ),
+        color=discord.Color.green()
+    )
+
+    await channel.send(embed=embed, view=TicketControls())
+
+    await interaction.followup.send(f"✅ Ticket créé : {channel.mention}", ephemeral=True)
+
+# ======================
+# MENU TICKETS
+# ======================
+
+class TicketMenu(discord.ui.Select):
+
+    def __init__(self):
+
+        options = [
+            discord.SelectOption(label=t["name"], value=str(i))
+            for i, t in enumerate(ticket_options)
+        ]
+
+        super().__init__(placeholder="Ouvrir un ticket...", options=options)
+
+    async def callback(self, interaction):
+        await create_ticket(interaction, int(self.values[0]))
+
+class TicketView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(TicketMenu())
+
+# ======================
+# PANEL
+# ======================
+
+@bot.command()
+async def ticket(ctx):
+
+    embed = discord.Embed(
+        title="🎫 Tickets",
+        description="Ouvre un ticket avec le menu",
+        color=discord.Color.blue()
+    )
+
+    await ctx.send(embed=embed, view=TicketView())
+
+# ======================
+# CONFIG
+# ======================
+
+class ConfigView(discord.ui.View):
+
+    @discord.ui.button(label="➕ Ajouter", style=discord.ButtonStyle.success)
+    async def add(self, interaction, button):
+
+        await interaction.response.send_message("Nom :", ephemeral=True)
+
+        def check(m):
+            return m.author.id == interaction.user.id
+
+        msg = await bot.wait_for("message", check=check)
+
+        ticket_options.append({"name": msg.content, "category_id": None})
+
+        await interaction.followup.send("✅ Ajouté", ephemeral=True)
+
+    @discord.ui.button(label="❌ Supprimer", style=discord.ButtonStyle.danger)
+    async def delete(self, interaction, button):
+
+        await interaction.response.send_message(
+            "\n".join([f"{i} → {t['name']}" for i, t in enumerate(ticket_options)]),
+            ephemeral=True
+        )
+
+        def check(m):
+            return m.author.id == interaction.user.id
+
+        msg = await bot.wait_for("message", check=check)
+
+        try:
+            ticket_options.pop(int(msg.content))
+            await interaction.followup.send("❌ supprimé", ephemeral=True)
+        except:
+            await interaction.followup.send("❌ erreur", ephemeral=True)
+
+    @discord.ui.button(label="📁 Assigner", style=discord.ButtonStyle.secondary)
+    async def assign(self, interaction, button):
+
+        text = "\n".join([f"{i} → {t['name']}" for i, t in enumerate(ticket_options)])
+
+        await interaction.response.send_message(
+            f"{text}\nFormat: index | id_categorie",
+            ephemeral=True
+        )
+
+        def check(m):
+            return m.author.id == interaction.user.id
+
+        msg = await bot.wait_for("message", check=check)
+
+        try:
+            idx, cat = msg.content.split("|")
+
+            ticket_options[int(idx)]["category_id"] = int(cat)
+
+            await interaction.followup.send("✅ assigné", ephemeral=True)
+        except:
+            await interaction.followup.send("❌ erreur", ephemeral=True)
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def config(ctx):
+    await ctx.send("⚙️ CONFIG", view=ConfigView())
+
+# ======================
+# MODERATION (inchangé)
+# ======================
+
+@bot.command()
+async def kick(ctx, member: discord.Member):
+
+    try:
+        await member.kick()
+        await ctx.send(f"{member.mention} a bien été kick du serveur")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour kick ce membre")
+
+@bot.command()
+async def ban(ctx, member: discord.Member):
+
+    try:
+        await member.ban()
+        await ctx.send(f"{member.mention} a bien été ban du serveur")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour ban ce membre")
+
+@bot.command()
+async def unban(ctx, user_id: int):
+
+    try:
+        user = await bot.fetch_user(user_id)
+        await ctx.guild.unban(user)
+        await ctx.send(f"{user.mention} a été unban du serveur")
+
+    except discord.NotFound:
+        await ctx.send("Utilisateur introuvable")
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour unban")
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def clear(ctx, amount: int):
+
+    if amount <= 0:
+        return await ctx.send("Tu dois mettre un nombre supérieur à 0")
+
+    deleted = await ctx.channel.purge(limit=amount + 1)
+
+    await ctx.send(f"{len(deleted)-1} messages supprimés", delete_after=5)
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def addrole(ctx, member: discord.Member, role: discord.Role):
+
+    try:
+        await member.add_roles(role)
+        await ctx.send(f"{member.mention} a reçu le rôle **{role.name}**")
+    except:
+        await ctx.send("Impossible d'ajouter ce rôle")
+
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def delrole(ctx, member: discord.Member, role: discord.Role):
+
+    try:
+        await member.remove_roles(role)
+        await ctx.send(f"Le rôle **{role.name}** a été retiré à {member.mention}")
+    except:
+        await ctx.send("Impossible de retirer ce rôle")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def lock(ctx):
+
+    overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
+    overwrite.send_messages = False
+    await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+
+    await ctx.send("Ce salon est désormais verrouillé")
+
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def unlock(ctx):
+
+    overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
+    overwrite.send_messages = True
+    await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
+
+    await ctx.send("Ce salon est de nouveau ouvert")
+
+@bot.command()
+@commands.has_permissions(moderate_members=True)
+async def mute(ctx, member: discord.Member, minutes: int):
+
+    try:
+        duration = discord.utils.utcnow() + datetime.timedelta(minutes=minutes)
+        await member.timeout(duration)
+
+        await ctx.send(f"{member.mention} est mute pendant {minutes} minutes")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour mute cette personne")
+
+
+@bot.command()
+@commands.has_permissions(moderate_members=True)
+async def unmute(ctx, member: discord.Member):
+
+    try:
+        await member.timeout(None)
+
+        await ctx.send(f"{member.mention} a été unmute")
+
+    except discord.Forbidden:
+        await ctx.send("Le bot n'a pas les permissions pour unmute cette personne")
+
+@bot.command()
+async def owner(ctx, member: discord.Member):
+
+    if ctx.author.id != ctx.guild.owner_id:
+        return await ctx.send("Seul le owner du serveur peut faire ça")
+
+    if member.id in owners:
+        return await ctx.send(f"{member.mention} est déjà owner bot")
+
+    owners.append(member.id)
+    save_owners()
+
+    await ctx.send(f"{member.mention} est maintenant owner bot")
+
+@bot.check
+async def global_owner_check(ctx):
+    return ctx.author.id in owners or ctx.author.id == ctx.guild.owner_id
+
+@bot.command()
+async def unowner(ctx, member: discord.Member):
+
+    if ctx.author.id != ctx.guild.owner_id:
+        return await ctx.send("Seul le owner du serveur peut faire ça")
+
+    if member.id not in owners:
+        return await ctx.send(f"{member.mention} n'est pas owner bot")
+
+    owners.remove(member.id)
+    save_owners()
+
+    await ctx.send(f"{member.mention} n'est plus owner bot")
+
+@bot.command()
+async def ownerlist(ctx):
+
+    if not owners:
+        return await ctx.send("Aucun owner")
+
+    mentions = []
+    for user_id in owners:
+        user = await bot.fetch_user(user_id)
+        mentions.append(user.mention)
+
+    await ctx.send("**Owners bot :**\n" + "\n".join(mentions))
+
+# ======================
+# NEW COMMANDS
+# ======================
+
+@bot.command()
+async def avatar(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(title="🖼 Avatar")
+    embed.set_image(url=member.display_avatar.url)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def userinfo(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(title="👤 User Info")
+    embed.add_field(name="Nom", value=member.name)
+    embed.add_field(name="ID", value=member.id)
+    embed.add_field(name="Créé le", value=member.created_at.strftime("%Y-%m-%d"))
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def serverinfo(ctx):
+
+    guild = ctx.guild
+
+    embed = discord.Embed(title="🏠 Server Info")
+    embed.add_field(name="Nom", value=guild.name)
+    embed.add_field(name="Membres", value=guild.member_count)
+    embed.add_field(name="Owner", value=guild.owner)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def adduser(ctx, member: discord.Member):
+
+    await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
+    await ctx.send(f"{member.mention} à été ajouté au ticket")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def rename(ctx, *, name):
+
+    await ctx.channel.edit(name=name)
+    await ctx.send(f"Le ticket à été renommé en {name}")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def deluser(ctx, member: discord.Member):
+
+    await ctx.channel.set_permissions(member, overwrite=None)
+    await ctx.send(f"{member.mention} à été retiré du ticket")
+
+# ======================
+# HELP
+# ======================
+
+@bot.command()
+async def help(ctx):
+
+    embed = discord.Embed(
+        title="📖 MENU D'AIDE",
+        description="Commandes du bot organisées par catégories",
+        color=discord.Color.blurple()
+    )
+
+    embed.add_field(
+        name="🎫 TICKETS",
+        value=(
+            "```yaml\n"
+            "+ticket      → Ouvrir un ticket\n"
+            "+config      → Config tickets\n"
+            "+adduser     → Ajouter utilisateur\n"
+            "+deluser     → Retirer utilisateur\n"
+            "+rename      → Renommer ticket\n"
+            "```"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+    name="🛠 MODÉRATION",
+    value=(
+        "```yaml\n"
+        "+kick @user          → Expulser un membre\n"
+        "+ban @user           → Bannir un membre\n"
+        "+unban id            → Débannir un membre\n"
+        "+clear <nombre>      → Supprimer des messages\n"
+        "+addrole @u @r       → Ajouter un rôle\n"
+        "+delrole @u @r       → Retirer un rôle\n"
+        "+lock                → Verrouiller le salon\n"
+        "+unlock              → Déverrouiller le salon\n"
+        "+mute @user min      → Mute un membre (minutes)\n"
+        "+unmute @user        → Enlever le mute\n"
+        "```"
+    ),
+    inline=False 
+    )
+
+    embed.add_field(
+    name="👑 OWNER SYSTEM",
+    value=(
+        "```yaml\n"
+        "+owner @user     → Donner les droits owner bot\n"
+        "+unowner @user   → Retirer owner\n"
+        "+ownerlist       → Voir les owners\n"
+        "```"
+    ),
+    inline=False
+    ) 
+
+
+    embed.add_field(
+        name="📊 UTILITAIRES",
+        value=(
+            "```yaml\n"
+            "+avatar [user]\n"
+            "+userinfo [user]\n"
+            "+serverinfo\n"
+            "```"
+        ),
+        inline=False
+    )
+
+    embed.set_footer(text=f"Demandé par {ctx.author}", icon_url=ctx.author.display_avatar)
+
+    await ctx.send(embed=embed)
 
 # ======================
 # RUN
