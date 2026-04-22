@@ -480,7 +480,7 @@ async def botpic(ctx, url: str = None):
                 img = await resp.read()
                 await bot.user.edit(avatar=img)
 
-        await ctx.send(Avatar du bot changé")
+        await ctx.send("Avatar du bot changé")
 
     except:
         await ctx.send("Erreur lors du changement d'avatar")
