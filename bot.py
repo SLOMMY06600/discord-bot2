@@ -527,79 +527,6 @@ async def help(ctx):
 
     await ctx.send(embed=pages[0], view=view)
 
-    embed = discord.Embed(
-        title="MENU D'AIDE",
-        description="Commandes du bot organisées par catégories",
-        color=discord.Color.blurple()
-    )
-
-    embed.add_field(
-        name="TICKETS",
-        value=(
-            "```yaml\n"
-            "+ticket\n"
-            "+config\n"
-            "+adduser\n"
-            "+deluser\n"
-            "+rename\n"
-            "```"
-        ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="MODÉRATION",
-        value=(
-            "```yaml\n"
-            "+kick\n"
-            "+ban\n"
-            "+unban\n"
-            "+clear\n"
-            "+addrole\n"
-            "+delrole\n"
-            "+lock\n"
-            "+unlock\n"
-            "+mute\n"
-            "+unmute\n"
-            "```"
-        ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="OWNER",
-        value=(
-            "```yaml\n"
-            "+owner\n"
-            "+unowner\n"
-            "+ownerlist\n"
-            "```"
-        ),
-        inline=False
-    )
-
-    embed.add_field(
-        name="UTILITAIRES",
-        value=(
-            "```yaml\n"
-            "+avatar\n"
-            "+userinfo\n"
-            "+serverinfo\n"
-            "+say\n"
-            "+botname\n"
-            "+botpic\n"
-            "```"
-        ),
-        inline=False
-    )
-
-    embed.set_footer(
-        text=f"Demandé par {ctx.author}",
-        icon_url=ctx.author.display_avatar
-    )
-
-    await ctx.send(embed=embed)
-
 class HelpView(discord.ui.View):
     def __init__(self):
         super().__init__()
@@ -705,9 +632,7 @@ class HelpView(discord.ui.View):
             self.page += 1
 
         await self.update(interaction)
-
-@bot.command()
-async def help(ctx):
+    
     
 # ======================
 # RUN
