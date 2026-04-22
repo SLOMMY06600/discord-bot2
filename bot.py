@@ -155,4 +155,4 @@ async def on_ready():
 # RUN
 # ======================
 
-bot.run(os.getenv("DISCORD_TOKEN"))
+bot.run(os.getenv("TOKEN"))
