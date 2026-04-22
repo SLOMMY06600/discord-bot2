@@ -516,59 +516,68 @@ async def help(ctx):
         name="🎫 TICKETS",
         value=(
             "```yaml\n"
-            "+ticket      → Ouvrir un ticket\n"
-            "+config      → Config tickets\n"
-            "+adduser     → Ajouter utilisateur\n"
-            "+deluser     → Retirer utilisateur\n"
-            "+rename      → Renommer ticket\n"
+            "+ticket\n"
+            "+config\n"
+            "+adduser\n"
+            "+deluser\n"
+            "+rename\n"
             "```"
         ),
         inline=False
     )
 
     embed.add_field(
-    name="🛠 MODÉRATION",
-    value=(
-        "```yaml\n"
-        "+kick @user          → Expulser un membre\n"
-        "+ban @user           → Bannir un membre\n"
-        "+unban id            → Débannir un membre\n"
-        "+clear <nombre>      → Supprimer des messages\n"
-        "+addrole @u @r       → Ajouter un rôle\n"
-        "+delrole @u @r       → Retirer un rôle\n"
-        "+lock                → Verrouiller le salon\n"
-        "+unlock              → Déverrouiller le salon\n"
-        "+mute @user min      → Mute un membre (minutes)\n"
-        "+unmute @user        → Enlever le mute\n"
-        "```"
-    ),
-    inline=False 
+        name="🛠 MODÉRATION",
+        value=(
+            "```yaml\n"
+            "+kick\n"
+            "+ban\n"
+            "+unban\n"
+            "+clear\n"
+            "+addrole\n"
+            "+delrole\n"
+            "+lock\n"
+            "+unlock\n"
+            "+mute\n"
+            "+unmute\n"
+            "```"
+        ),
+        inline=False
     )
 
     embed.add_field(
-    name="👑 OWNER SYSTEM",
-    value=(
-        "```yaml\n"
-        "+owner @user     → Donner les droits owner bot\n"
-        "+unowner @user   → Retirer owner\n"
-        "+ownerlist       → Voir les owners\n"
-        "```"
-    ),
-    inline=False
-    ) 
+        name="👑 OWNER",
+        value=(
+            "```yaml\n"
+            "+owner\n"
+            "+unowner\n"
+            "+ownerlist\n"
+            "```"
+        ),
+        inline=False
+    )
 
     embed.add_field(
-    name="🤖 BOT",
-    value=(
-        "```yaml\n"
-        "+say <msg>        → Faire parler le bot\n"
-        "+botpic <url>     → Changer l'avatar du bot\n"
-        "+botname <nom>    → Changer le nom du bot\n"
-        "+botbanner <url>  → Changer la bannière\n"
-        "```"
-    ),
-    inline=False
+        name="📊 UTILITAIRES",
+        value=(
+            "```yaml\n"
+            "+avatar\n"
+            "+userinfo\n"
+            "+serverinfo\n"
+            "+say\n"
+            "+botname\n"
+            "+botpic\n"
+            "```"
+        ),
+        inline=False
     )
+
+    embed.set_footer(
+        text=f"Demandé par {ctx.author}",
+        icon_url=ctx.author.display_avatar
+    )
+
+    await ctx.send(embed=embed)
 
 # ======================
 # RUN
