@@ -442,9 +442,8 @@ async def botpic(ctx, url=None):
 
 @bot.command()
 async def say(ctx, *, message=None):
-    if message is None:
-        await ctx.send("Tu dois écrire un message !")
-        return
+    if not message:
+        return await ctx.send("Tu dois écrire un message !")
 
     try:
         await ctx.message.delete()
@@ -452,6 +451,10 @@ async def say(ctx, *, message=None):
         pass
 
     await ctx.send(message)
+
+@bot.event
+async def on_command_error(ctx, error):
+    print(error)
 
 # ======================
 # NEW COMMANDS
