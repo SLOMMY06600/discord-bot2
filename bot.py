@@ -471,66 +471,6 @@ async def avatar(ctx, member: discord.Member = None):
     embed.set_image(url=url)
 
     await ctx.send(embed=embed)
-
-@bot.command()
-async def serverinfo(ctx):
-
-    guild = ctx.guild
-
-    if guild is None:
-        return await ctx.send("Commande utilisable uniquement sur un serveur")
-
-    embed = discord.Embed(
-        title=f"Infomation Serveur",
-        color=discord.Color.blue()
-    )
-
-    if guild.icon:
-        embed.set_thumbnail(url=guild.icon.url)
-
-    owner = guild.owner.mention if guild.owner else "Inconnu"
-
-    embed.add_field(name="👑 Owner", value=owner, inline=True)
-    embed.add_field(name="👥 Membres", value=str(guild.member_count), inline=True)
-    embed.add_field(name="🆔 ID", value=str(guild.id), inline=True)
-
-    embed.add_field(name="💬 Text", value=str(len(guild.text_channels)), inline=True)
-    embed.add_field(name="🔊 Vocal", value=str(len(guild.voice_channels)), inline=True)
-    embed.add_field(name="📁 Catégories", value=str(len(guild.categories)), inline=True)
-
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def userinfo(ctx, member: discord.Member = None):
-
-    member = member or ctx.author
-
-    embed = discord.Embed(
-        title=f"👤 Userinfo - {member}",
-        color=discord.Color.blurple()
-    )
-
-    embed.set_thumbnail(url=member.display_avatar.url)
-
-    embed.add_field(name="🆔 ID", value=member.id, inline=True)
-    embed.add_field(name="📅 Compte créé", value=member.created_at.strftime("%d/%m/%Y"), inline=True)
-
-    if member.joined_at:
-        embed.add_field(name="📥 Rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y"), inline=True)
-    else:
-        embed.add_field(name="📥 Rejoint le serveur", value="Inconnu", inline=True)
-
-    roles = [role.mention for role in member.roles if role != ctx.guild.default_role]
-    embed.add_field(
-        name=f"🎭 Rôles ({len(roles)})",
-        value=", ".join(roles) if roles else "Aucun rôle",
-        inline=False
-    )
-
-    embed.set_footer(text=f"Demandé par {ctx.author}")
-
-    await ctx.send(embed=embed)
     
 # ======================
 # NEW COMMANDS
@@ -622,5 +562,69 @@ async def help(ctx):
 # ======================
 # RUN
 # ======================
+
+@bot.command()
+async def serverinfo(ctx):
+
+    guild = ctx.guild
+
+    if guild is None:
+        return await ctx.send("❌ Utilisable uniquement dans un serveur")
+
+    embed = discord.Embed(
+        title=f"📊 {guild.name}",
+        color=discord.Color.blue()
+    )
+
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
+
+    embed.add_field(name="🆔 ID", value=str(guild.id), inline=True)
+    embed.add_field(name="👑 Owner", value=guild.owner.mention if guild.owner else "Inconnu", inline=True)
+    embed.add_field(name="👥 Membres", value=str(guild.member_count), inline=True)
+
+    embed.add_field(name="💬 Salons texte", value=str(len(guild.text_channels)), inline=True)
+    embed.add_field(name="🔊 Salons vocaux", value=str(len(guild.voice_channels)), inline=True)
+    embed.add_field(name="📁 Catégories", value=str(len(guild.categories)), inline=True)
+
+    embed.add_field(name="📅 Créé le", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
+
+    embed.set_footer(text=f"Demandé par {ctx.author}")
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def userinfo(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(
+        title=f"👤 Userinfo - {member}",
+        color=discord.Color.blurple()
+    )
+
+    embed.set_thumbnail(url=member.display_avatar.url)
+
+    embed.add_field(name="🆔 ID", value=str(member.id), inline=True)
+    embed.add_field(name="📅 Compte créé", value=member.created_at.strftime("%d/%m/%Y"), inline=True)
+
+    if member.joined_at:
+        embed.add_field(name="📥 Rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y"), inline=True)
+    else:
+        embed.add_field(name="📥 Rejoint le serveur", value="Inconnu", inline=True)
+
+    embed.add_field(name="🤖 Bot", value="Oui" if member.bot else "Non", inline=True)
+    embed.add_field(name="🔝 Rôle principal", value=member.top_role.mention, inline=True)
+
+    roles = [role.mention for role in member.roles if role != ctx.guild.default_role]
+    embed.add_field(
+        name=f"🎭 Rôles ({len(roles)})",
+        value=", ".join(roles) if roles else "Aucun rôle",
+        inline=False
+    )
+
+    embed.set_footer(text=f"Demandé par {ctx.author}")
+
+    await ctx.send(embed=embed)
 
 bot.run(os.getenv("DISCORD_TOKEN"))
