@@ -442,101 +442,6 @@ async def botpic(ctx, url=None):
     except:
         await ctx.send("Erreur lors du changement d'avatar")
 
-@bot.command()
-async def userinfo(ctx, member: discord.Member = None):
-
-    member = member or ctx.author
-
-    embed = discord.Embed(
-        title=f"👤 Userinfo - {member}",
-        color=discord.Color.blue()
-    )
-
-    embed.set_thumbnail(url=member.display_avatar.url)
-
-    embed.add_field(name="ID", value=member.id, inline=True)
-    embed.add_field(name="Nom", value=str(member), inline=True)
-    embed.add_field(name="Compte créé", value=member.created_at.strftime("%d/%m/%Y"), inline=False)
-
-    if member.joined_at:
-        embed.add_field(name="A rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y"), inline=False)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def serverinfo(ctx):
-
-    guild = ctx.guild
-
-    embed = discord.Embed(
-        title=f"🖥️ Serverinfo - {guild.name}",
-        color=discord.Color.green()
-    )
-
-    if guild.icon:
-        embed.set_thumbnail(url=guild.icon.url)
-
-    embed.add_field(name="ID", value=guild.id, inline=True)
-    embed.add_field(name="Owner", value=str(guild.owner), inline=True)
-    embed.add_field(name="Membres", value=guild.member_count, inline=True)
-    embed.add_field(name="Rôles", value=len(guild.roles), inline=True)
-    embed.add_field(name="Channels", value=len(guild.channels), inline=True)
-    embed.add_field(name="Créé le", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-@commands.has_permissions(manage_messages=True)
-async def say(ctx, *, message=None):
-
-    if message is None:
-        return await ctx.send("❌ Tu dois écrire un message")
-
-    try:
-        await ctx.message.delete()
-    except:
-        pass
-
-    await ctx.send(message)
-
-@bot.command()
-async def avatar(ctx, member: discord.Member = None):
-
-    member = member or ctx.author
-
-    embed = discord.Embed(
-        title=f"🖼️ Avatar de {member}",
-        color=discord.Color.purple()
-    )
-
-    embed.set_image(url=member.display_avatar.url)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def adduser(ctx, member: discord.Member):
-
-    if not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("Cette commande doit être utilisée dans un ticket")
-
-    try:
-        await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
-        await ctx.send(f"{member.mention} a été ajouté au ticket")
-    except:
-        await ctx.send("Impossible d'ajouter cet utilisateur")
-
-@bot.command()
-async def deluser(ctx, member: discord.Member):
-
-    if not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("Cette commande doit être utilisée dans un ticket")
-
-    try:
-        await ctx.channel.set_permissions(member, overwrite=None)
-        await ctx.send(f"{member.mention} a été retiré du ticket")
-    except:
-        await ctx.send("Impossible de retirer cet utilisateur")
-
 
 # ======================
 # NEW COMMANDS
@@ -633,6 +538,101 @@ async def help(ctx):
     )
 
     await ctx.send(embed=embed, view=HelpView())
+
+@bot.command()
+async def userinfo(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(
+        title=f"👤 Userinfo - {member}",
+        color=discord.Color.blue()
+    )
+
+    embed.set_thumbnail(url=member.display_avatar.url)
+
+    embed.add_field(name="ID", value=member.id, inline=True)
+    embed.add_field(name="Nom", value=str(member), inline=True)
+    embed.add_field(name="Compte créé", value=member.created_at.strftime("%d/%m/%Y"), inline=False)
+
+    if member.joined_at:
+        embed.add_field(name="A rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y"), inline=False)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def serverinfo(ctx):
+
+    guild = ctx.guild
+
+    embed = discord.Embed(
+        title=f"🖥️ Serverinfo - {guild.name}",
+        color=discord.Color.green()
+    )
+
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
+
+    embed.add_field(name="ID", value=guild.id, inline=True)
+    embed.add_field(name="Owner", value=str(guild.owner), inline=True)
+    embed.add_field(name="Membres", value=guild.member_count, inline=True)
+    embed.add_field(name="Rôles", value=len(guild.roles), inline=True)
+    embed.add_field(name="Channels", value=len(guild.channels), inline=True)
+    embed.add_field(name="Créé le", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def say(ctx, *, message=None):
+
+    if message is None:
+        return await ctx.send("❌ Tu dois écrire un message")
+
+    try:
+        await ctx.message.delete()
+    except:
+        pass
+
+    await ctx.send(message)
+
+@bot.command()
+async def avatar(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(
+        title=f"🖼️ Avatar de {member}",
+        color=discord.Color.purple()
+    )
+
+    embed.set_image(url=member.display_avatar.url)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def adduser(ctx, member: discord.Member):
+
+    if not ctx.channel.name.startswith("ticket-"):
+        return await ctx.send("Cette commande doit être utilisée dans un ticket")
+
+    try:
+        await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
+        await ctx.send(f"{member.mention} a été ajouté au ticket")
+    except:
+        await ctx.send("Impossible d'ajouter cet utilisateur")
+
+@bot.command()
+async def deluser(ctx, member: discord.Member):
+
+    if not ctx.channel.name.startswith("ticket-"):
+        return await ctx.send("Cette commande doit être utilisée dans un ticket")
+
+    try:
+        await ctx.channel.set_permissions(member, overwrite=None)
+        await ctx.send(f"{member.mention} a été retiré du ticket")
+    except:
+        await ctx.send("Impossible de retirer cet utilisateur")
 
 
 # ======================
