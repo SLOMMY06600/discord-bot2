@@ -455,7 +455,7 @@ async def userinfo(ctx, member: discord.Member = None):
     member = member or ctx.author
 
     embed = discord.Embed(
-        title=f"👤 Userinfo - {member}",
+        title=f"Userinfo - {member}",
         color=discord.Color.blue()
     )
 
@@ -474,7 +474,7 @@ async def serverinfo(ctx):
     guild = ctx.guild
 
     embed = discord.Embed(
-        title=f"🖥️ Serverinfo - {guild.name}",
+        title=f"Serverinfo - {guild.name}",
         color=discord.Color.green()
     )
 
@@ -505,13 +505,37 @@ async def avatar(ctx, member: discord.Member = None):
     member = member or ctx.author
 
     embed = discord.Embed(
-        title=f"🖼️ Avatar de {member}",
+        title=f"Avatar de {member}",
         color=discord.Color.purple()
     )
 
     embed.set_image(url=member.display_avatar.url)
 
     await ctx.send(embed=embed)
+
+@bot.command()
+async def adduser(ctx, member: discord.Member):
+
+    if not ctx.channel.name.startswith("ticket-"):
+        return await ctx.send("Cette commande doit être utilisée dans un ticket")
+
+    try:
+        await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
+        await ctx.send(f"{member.mention} a été ajouté au ticket")
+    except:
+        await ctx.send("Impossible d'ajouter cet utilisateur")
+
+@bot.command()
+async def deluser(ctx, member: discord.Member):
+
+    if not ctx.channel.name.startswith("ticket-"):
+        return await ctx.send("Cette commande doit être utilisée dans un ticket")
+
+    try:
+        await ctx.channel.set_permissions(member, overwrite=None)
+        await ctx.send(f"{member.mention} a été retiré du ticket")
+    except:
+        await ctx.send("Impossible de retirer cet utilisateur")
 
 
 # ======================
