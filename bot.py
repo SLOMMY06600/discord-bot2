@@ -457,16 +457,18 @@ async def say(ctx, *, message: str = None):
 @bot.command()
 async def avatar(ctx, member: discord.Member = None):
 
-    # Si aucun membre n’est mentionné → prend l’auteur
-    if member is None:
-        member = ctx.author
+    member = member or ctx.author
+
+    try:
+        url = member.display_avatar.url
+    except:
+        return await ctx.send("❌ Impossible de récupérer l'avatar")
 
     embed = discord.Embed(
         title=f"Avatar de {member}",
         color=discord.Color.blurple()
     )
-
-    embed.set_image(url=member.display_avatar.url)
+    embed.set_image(url=url)
 
     await ctx.send(embed=embed)
     
