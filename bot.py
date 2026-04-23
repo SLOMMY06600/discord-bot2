@@ -6,29 +6,22 @@ import json
 import os
 import aiohttp
 import asyncio
-antiban = True
-antiunban = True
-antikick = True
-antirole = True
-antirank = True
-antisalon = True
-antieveryone = True
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+intents.guilds = True
 owners = []
-WHITELIST = []
 
 OWNERS_FILE = "owners.json"
 
 def load_owners():
-    if os.path.exists(OWNERS_FILE):
-        with open(OWNERS_FILE, "r") as f:
-            return json.load(f)
+    try:
+        if os.path.exists(OWNERS_FILE):
+            with open(OWNERS_FILE, "r") as f:
+                return json.load(f)
+    except:
+        return []
     return []
-
-def save_owners():
-    with open(OWNERS_FILE, "w") as f:
-        json.dump(owners, f)
-
-owners = load_owners()
 
 # ======================
 # INTENTS
