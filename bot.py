@@ -44,9 +44,9 @@ bot = commands.Bot(command_prefix="+", intents=intents, help_command=None)
 # ======================
 
 ticket_options = [
-    {"name": "🛠 Support", "category_id": None},
-    {"name": "🐞 Bug", "category_id": None},
-    {"name": "❓ Autre", "category_id": None}
+    {"name": "🛠Support", "category_id": None},
+    {"name": "Bug", "category_id": None},
+    {"name": "Autre", "category_id": None}
 ]
 
 LOG_CHANNEL_ID = 1496568287415505069
@@ -81,17 +81,17 @@ async def create_transcript(channel):
 
 class TicketControls(discord.ui.View):
 
-    @discord.ui.button(label="📌 Claim", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="Claim", style=discord.ButtonStyle.primary)
     async def claim(self, interaction, button):
 
         await interaction.response.send_message(
-            f"📌 Ticket pris par {interaction.user.mention}"
+            f"Ticket pris par {interaction.user.mention}"
         )
 
-    @discord.ui.button(label="🔒 Fermer", style=discord.ButtonStyle.danger)
+    @discord.ui.button(label="Fermer", style=discord.ButtonStyle.danger)
     async def close(self, interaction, button):
 
-        await interaction.response.send_message("🔒 Fermeture...", ephemeral=True)
+        await interaction.response.send_message("Fermeture...", ephemeral=True)
 
         file = await create_transcript(interaction.channel)
 
@@ -685,7 +685,7 @@ class HelpView(discord.ui.View):
     async def interaction_check(self, interaction: discord.Interaction):
         if interaction.user.id not in owners and interaction.user.id != interaction.guild.owner_id:
             await interaction.response.send_message(
-                f"{interaction.user.mention} ❌ Vous n'avez pas l'autorisation d'utiliser ce menu",
+                f"{interaction.user.mention} Vous ne pouvez pas executer cette commande",
                 ephemeral=True
             )
             return False
