@@ -755,35 +755,36 @@ async def on_member_remove(member):
 
     guild = member.guild
 
-    await asyncio.sleep(1)  # très important (audit log delay)
+    await asyncio.sleep(1.5)  # plus safe
 
     async for entry in guild.audit_logs(limit=10, action=discord.AuditLogAction.kick):
 
-        # on vérifie que c’est bien CE membre qui a été kick
-        if entry.target.id == member.id:
+        # vérifie que c’est le BON membre
+        if entry.target.id != member.id:
+            continue
 
-            executor = entry.user
+        executor = entry.user
 
-            # ignore whitelist / owner
-            if executor.id in WHITELIST or executor.id == guild.owner_id:
-                return
+        # ignore whitelist + owner + bot lui-même
+        if executor.id in WHITELIST or executor.id == guild.owner_id or executor.id == bot.user.id:
+            return
 
-            try:
-                # 💥 kick celui qui a kick
-                await executor.kick(reason="Antikick")
+        try:
+            # kick le staff fautif
+            await executor.kick(reason="Antikick")
 
-                # 🔥 retire ses rôles
-                for role in executor.roles:
-                    if role.name != "@everyone":
-                        await executor.remove_roles(role)
+            # retire tous ses rôles
+            for role in executor.roles:
+                if role.name != "@everyone":
+                    await executor.remove_roles(role)
 
-                # (optionnel) message log
-                print(f"{executor} a été sanctionné (antikick)")
+            # log console
+            print(f"KICK détecté : {member} par {executor}")
 
-            except Exception as e:
-                print("Erreur antikick:", e)
+        except Exception as e:
+            print("Erreur antikick:", e)
 
-            break
+        break
 
 @bot.event
 async def on_member_unban(guild, user):
