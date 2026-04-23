@@ -516,7 +516,7 @@ class HelpSelect(discord.ui.Select):
                 "**+Say**\nFait Parler Le Bot"
             )
 
-                        elif choice == "Moderation                           ":
+                       elif choice == "Moderation                           ":
                            embed.title = "Moderation                        "
                            embed.description = (
                                "**+Kick**\nExpulse Un Membre            \n\n"
