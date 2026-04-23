@@ -499,6 +499,10 @@ async def serverinfo(ctx):
     embed.set_footer(text=f"Demandé par {ctx.author}")
 
     await ctx.send(embed=embed)
+
+@bot.command()
+async def test(ctx):
+    await ctx.send("OK COMMANDS WORK")
     
 # ======================
 # NEW COMMANDS
