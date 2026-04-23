@@ -594,7 +594,7 @@ async def serverinfo(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def userinfo(ctx, member: discord.Member = None):
+async def userinfo(ctx, member: discord.Member = True):
 
     member = member or ctx.author
 
