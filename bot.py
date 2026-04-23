@@ -755,30 +755,33 @@ async def on_member_remove(member):
 
     guild = member.guild
 
-    await asyncio.sleep(1)  # laisse le temps aux logs
+    await asyncio.sleep(1)  # très important (audit log delay)
 
-    async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
+    async for entry in guild.audit_logs(limit=10, action=discord.AuditLogAction.kick):
 
-        # vérifie que c'est bien CE membre qui a été kick
+        # on vérifie que c’est bien CE membre qui a été kick
         if entry.target.id == member.id:
 
             executor = entry.user
 
-            # whitelist / owner
+            # ignore whitelist / owner
             if executor.id in WHITELIST or executor.id == guild.owner_id:
                 return
 
             try:
-                # sanction
+                # 💥 kick celui qui a kick
                 await executor.kick(reason="Antikick")
 
-                # retire ses rôles
+                # 🔥 retire ses rôles
                 for role in executor.roles:
                     if role.name != "@everyone":
                         await executor.remove_roles(role)
 
-            except:
-                pass
+                # (optionnel) message log
+                print(f"{executor} a été sanctionné (antikick)")
+
+            except Exception as e:
+                print("Erreur antikick:", e)
 
             break
 
@@ -846,41 +849,6 @@ async def on_member_update(before, after):
             break
     except:
         pass
-
-@bot.event
-async def on_member_remove(member):
-
-    if not antikick:
-        return
-
-    guild = member.guild
-
-    await asyncio.sleep(1)  # laisse le temps aux logs
-
-    async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
-
-        # vérifie que c'est bien CE membre qui a été kick
-        if entry.target.id == member.id:
-
-            executor = entry.user
-
-            # whitelist / owner
-            if executor.id in WHITELIST or executor.id == guild.owner_id:
-                return
-
-            try:
-                # sanction
-                await executor.kick(reason="Antikick")
-
-                # retire ses rôles
-                for role in executor.roles:
-                    if role.name != "@everyone":
-                        await executor.remove_roles(role)
-
-            except:
-                pass
-
-            break
 
 # ======================
 # RUN
