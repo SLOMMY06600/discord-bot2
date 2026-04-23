@@ -584,10 +584,12 @@ class HelpSelect(discord.ui.Select):
 
         await interaction.response.edit_message(embed=embed, view=self.view)
 
+
 class HelpView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=60)
         self.add_item(HelpSelect())
+
 
 @bot.command()
 async def help(ctx):
