@@ -637,5 +637,44 @@ async def userinfo(ctx, member: discord.Member = None):
 
     await ctx.send(embed=embed)
 
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def rename(ctx, *, name: str = None):
+
+    if name is None:
+        return await ctx.send("Tu dois donner un nom")
+
+    try:
+        await ctx.channel.edit(name=name)
+        await ctx.send(f"Salon renommé en **{name}**")
+    except:
+        await ctx.send("Impossible de renommer ce salon")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def adduser(ctx, member: discord.Member = None):
+
+    if member is None:
+        return await ctx.send("Tu dois mentionner un utilisateur")
+
+    try:
+        await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
+        await ctx.send(f"{member.mention} ajouté au ticket")
+    except:
+        await ctx.send("Impossible d’ajouter cet utilisateur")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def deluser(ctx, member: discord.Member = None):
+
+    if member is None:
+        return await ctx.send("Tu dois mentionner un utilisateur")
+
+    try:
+        await ctx.channel.set_permissions(member, overwrite=None)
+        await ctx.send(f"{member.mention} retiré du ticket")
+    except:
+        await ctx.send("Impossible de retirer cet utilisateur")
+
 
 bot.run(os.getenv("DISCORD_TOKEN"))
