@@ -516,19 +516,19 @@ class HelpSelect(discord.ui.Select):
                 "**+Say**\nFait Parler Le Bot"
             )
 
-                       elif choice == "Moderation                           ":
-                           embed.title = "Moderation                        "
-                           embed.description = (
-                               "**+Kick**\nExpulse Un Membre            \n\n"
-                               "**+Ban**\nBannit Un Membre              \n\n"
-                               "**+Unban**\nDébannit Un Utilisateur     \n\n"
-                               "**+Clear**\nSupprime Des Messages       \n\n"
-                               "**+Addrole**\nAjoute Un Rôle            \n\n"
-                               "**+Delrole**\nRetire Un Rôle            \n\n"
-                               "**+Lock**\nVerrouille Un Salon          \n\n"
-                               "**+Unlock**\nDéverrouille Un Salon      \n\n"
-                               "**+Mute**\nRend Muet Un Membre          \n\n"
-                               "**+Unmute**\nRetire Le Mute                 "
+        elif choice == "Moderation                           ":
+            embed.title = "Moderation                        "
+            embed.description = (
+                "**+Kick**\nExpulse Un Membre            \n\n"
+                "**+Ban**\nBannit Un Membre              \n\n"
+                "**+Unban**\nDébannit Un Utilisateur     \n\n"
+                "**+Clear**\nSupprime Des Messages       \n\n"
+                "**+Addrole**\nAjoute Un Rôle            \n\n"
+                "**+Delrole**\nRetire Un Rôle            \n\n"
+                "**+Lock**\nVerrouille Un Salon          \n\n"
+                "**+Unlock**\nDéverrouille Un Salon      \n\n"
+                "**+Mute**\nRend Muet Un Membre          \n\n"
+                "**+Unmute**\nRetire Le Mute                 "
             )
 
         elif choice == "Owner":
