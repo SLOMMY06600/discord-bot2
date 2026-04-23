@@ -453,6 +453,22 @@ async def say(ctx, *, message: str = None):
         pass
 
     await ctx.send(message)
+
+@bot.command()
+async def avatar(ctx, member: discord.Member = None):
+
+    # Si aucun membre n’est mentionné → prend l’auteur
+    if member is None:
+        member = ctx.author
+
+    embed = discord.Embed(
+        title=f"Avatar de {member}",
+        color=discord.Color.blurple()
+    )
+
+    embed.set_image(url=member.display_avatar.url)
+
+    await ctx.send(embed=embed)
     
 # ======================
 # NEW COMMANDS
