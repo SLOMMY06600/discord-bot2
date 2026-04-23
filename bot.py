@@ -519,17 +519,6 @@ async def deluser(ctx, member: discord.Member):
 # HELP
 # ======================
 
-@bot.command()
-async def help(ctx):
-
-    view = HelpView()
-    pages = view.get_pages()
-
-    embed = pages[0]
-    embed.set_footer(text="📄 Page 1/3 • Bot Help Menu")
-
-    await ctx.send(embed=embed, view=view)
-
 class HelpView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=60)
@@ -539,80 +528,80 @@ class HelpView(discord.ui.View):
 
         # ================= PAGE 1 =================
         page1 = discord.Embed(
-            title="📖 **HELP MENU**",
-            description="🎫 **Tickets** • 🧰 **Utilitaires**",
-            color=discord.Color.dark_blue()
+            title="Help Menu",
+            description="Tickets Et Utilitaires",
+            color=discord.Color.default()  # noir/gris (style sombre Discord)
         )
 
         page1.add_field(
-            name="🎫 **TICKETS**",
+            name="Tickets",
             value=(
-                "**+ticket**\n➜ Ouvre le menu des tickets\n\n"
-                "**+config**\n➜ Configure les tickets (admin)\n\n"
-                "**+adduser**\n➜ Ajoute un utilisateur au ticket\n\n"
-                "**+deluser**\n➜ Retire un utilisateur du ticket\n\n"
-                "**+rename**\n➜ Renomme le salon du ticket"
+                "**+Ticket**\nOuvre Le Menu Des Tickets\n\n"
+                "**+Config**\nConfigure Les Tickets (Admin)\n\n"
+                "**+Adduser**\nAjoute Un Utilisateur Au Ticket\n\n"
+                "**+Deluser**\nRetire Un Utilisateur Du Ticket\n\n"
+                "**+Rename**\nRenomme Le Salon Du Ticket"
             ),
             inline=False
         )
 
         page1.add_field(
-            name="🧰 **UTILITAIRES**",
+            name="Utilitaires",
             value=(
-                "**+avatar**\n➜ Affiche l’avatar d’un utilisateur\n\n"
-                "**+userinfo**\n➜ Infos utilisateur\n\n"
-                "**+serverinfo**\n➜ Infos du serveur\n\n"
-                "**+say**\n➜ Fait parler le bot"
+                "**+Avatar**\nAffiche L’Avatar D’Un Utilisateur\n\n"
+                "**+Userinfo**\nInformations Utilisateur\n\n"
+                "**+Serverinfo**\nInformations Serveur\n\n"
+                "**+Say**\nFait Parler Le Bot"
             ),
             inline=False
         )
 
         # ================= PAGE 2 =================
         page2 = discord.Embed(
-            title="📖 **HELP MENU**",
-            description="🛡️ **Modération**",
-            color=discord.Color.dark_blue()
+            title="Help Menu",
+            description="Moderation",
+            color=discord.Color.default()
         )
 
         page2.add_field(
-            name="🛡️ **MODÉRATION**",
+            name="Moderation",
             value=(
-                "**+kick**\n➜ Expulse un membre\n\n"
-                "**+ban**\n➜ Bannit un membre\n\n"
-                "**+unban**\n➜ Débannit un utilisateur\n\n"
-                "**+clear**\n➜ Supprime des messages\n\n"
-                "**+addrole**\n➜ Ajoute un rôle\n\n"
-                "**+delrole**\n➜ Retire un rôle\n\n"
-                "**+lock**\n➜ Verrouille un salon\n\n"
-                "**+unlock**\n➜ Déverrouille un salon\n\n"
-                "**+mute**\n➜ Mute un membre\n\n"
-                "**+unmute**\n➜ Unmute un membre"
+                "**+Kick**\nExpulse Un Membre\n\n"
+                "**+Ban**\nBannit Un Membre\n\n"
+                "**+Unban**\nDébannit Un Utilisateur\n\n"
+                "**+Clear**\nSupprime Des Messages\n\n"
+                "**+Addrole**\nAjoute Un Rôle\n\n"
+                "**+Delrole**\nRetire Un Rôle\n\n"
+                "**+Lock**\nVerrouille Un Salon\n\n"
+                "**+Unlock**\nDéverrouille Un Salon\n\n"
+                "**+Mute**\nRend Muet Un Membre\n\n"
+                "**+Unmute**\nRetire Le Mute"
             ),
             inline=False
         )
 
         # ================= PAGE 3 =================
         page3 = discord.Embed(
-            title="📖 **HELP MENU**",
-            description="👑 **Owner & Bot**",
-            color=discord.Color.dark_blue()
+            title="Help Menu",
+            description="Owner Et Bot",
+            color=discord.Color.default()
         )
 
         page3.add_field(
-            name="👑 **OWNER**",
+            name="Owner",
             value=(
-                "**+owner**\n➜ Ajoute un owner bot\n\n"
-                "**+unowner**\n➜ Retire un owner bot\n\n"
-                "**+ownerlist**\n➜ Liste des owners"
+                "**+Owner**\nAjoute Un Owner Bot\n\n"
+                "**+Unowner**\nRetire Un Owner Bot\n\n"
+                "**+Ownerlist**\nListe Des Owners"
             ),
             inline=False
         )
 
         page3.add_field(
-            name="🤖 **BOT**",
+            name="Bot",
             value=(
-                "**+botname**\n➜ Change le nom du bot\n\n"
-                "**+botpic**\n➜ Change l’avatar du bot"
+                "**+Botname**\nChange Le Nom Du Bot\n\n"
+                "**+Botpic**\nChange L’Avatar Du Bot"
             ),
             inline=False
         )
@@ -623,11 +612,11 @@ class HelpView(discord.ui.View):
         pages = self.get_pages()
 
         embed = pages[self.page]
-        embed.set_footer(text=f"📄 Page {self.page + 1}/3 • Bot Help Menu")
+        embed.set_footer(text=f"Page {self.page + 1}/3")
 
         await interaction.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(label="⬅️ Précédent", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="Precedent", style=discord.ButtonStyle.secondary)
     async def back(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if self.page > 0:
@@ -635,13 +624,24 @@ class HelpView(discord.ui.View):
 
         await self.update(interaction)
 
-    @discord.ui.button(label="➡️ Suivant", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="Suivant", style=discord.ButtonStyle.secondary)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if self.page < 2:
             self.page += 1
 
         await self.update(interaction)
+
+@bot.command()
+async def help(ctx):
+
+    view = HelpView()
+    pages = view.get_pages()
+
+    embed = pages[0]
+    embed.set_footer(text="Page 1/3")
+
+    await ctx.send(embed=embed, view=view)
 
 # ======================
 # RUN
