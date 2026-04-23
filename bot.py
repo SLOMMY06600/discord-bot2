@@ -613,9 +613,6 @@ async def userinfo(ctx, member: discord.Member = True):
     else:
         embed.add_field(name="📥 Rejoint le serveur", value="Inconnu", inline=True)
 
-    embed.add_field(name="🤖 Bot", value="Oui" if member.bot else "Non", inline=True)
-    embed.add_field(name="🔝 Rôle principal", value=member.top_role.mention, inline=True)
-
     roles = [role.mention for role in member.roles if role != ctx.guild.default_role]
     embed.add_field(
         name=f"🎭 Rôles ({len(roles)})",
