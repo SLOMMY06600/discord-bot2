@@ -8,6 +8,13 @@ import aiohttp
 intents.members = True
 intents.guilds = True
 intents.message_content = True
+antiban = True
+antiunban = True
+antikick = True
+antirole = True
+antirank = True
+antisalon = True
+antieveryone = True
 owners = []
 
 OWNERS_FILE = "owners.json"
@@ -443,125 +450,124 @@ async def botpic(ctx, url=None):
     except:
         await ctx.send("Erreur lors du changement d'avatar")
 
+
 @bot.command()
-async def say(ctx, *, message=None):
-    if not message:
-        return await ctx.send("Tu dois écrire un message !")
+@commands.has_permissions(administrator=True)
+async def antiban(ctx, mode=None):
 
-    try:
-        await ctx.message.delete()
-    except:
-        pass
+    global antiban
 
-    await ctx.send(message)
+    if mode == "on":
+        antiban = True
+        return await ctx.send("Antiban activé")
 
-@bot.event
-async def on_command_error(ctx, error):
-    print(error)
+    if mode == "off":
+        antiban = False
+        return await ctx.send("Antiban désactivé")
 
-import discord
-import datetime
-
-WHITELIST = []
-
-def allowed(user_id):
-    return user_id in WHITELIST
+    await ctx.send("Utilise +antiban on/off")
 
 
-async def get_executor(guild, action):
-    async for entry in guild.audit_logs(limit=1, action=action):
-        return entry.user
-    return None
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def antiunban(ctx, mode=None):
+
+    global antiunban
+
+    if mode == "on":
+        antiunban = True
+        return await ctx.send("Antiunban activé")
+
+    if mode == "off":
+        antiunban = False
+        return await ctx.send("Antiunban désactivé")
+
+    await ctx.send("Utilise +antiunban on/off")
 
 
-# ======================
-# ANTI BAN
-# ======================
-@bot.event
-async def on_member_ban(guild, user):
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def antikick(ctx, mode=None):
 
-    if user.id in WHITELIST:
-        return
+    global antikick
 
-    executor = await get_executor(guild, discord.AuditLogAction.ban)
+    if mode == "on":
+        antikick = True
+        return await ctx.send("Antikick activé")
 
-    if executor and not allowed(executor.id):
+    if mode == "off":
+        antikick = False
+        return await ctx.send("Antikick désactivé")
 
-        try:
-            await guild.unban(user)
-            await guild.ban(executor, reason="Anti-Nuke BAN")
-        except:
-            pass
+    await ctx.send("Utilise +antikick on/off")
 
 
-# ======================
-# ANTI KICK
-# ======================
-@bot.event
-async def on_member_remove(member):
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def antirole(ctx, mode=None):
 
-    if member.id in WHITELIST:
-        return
+    global antirole
 
-    executor = await get_executor(member.guild, discord.AuditLogAction.kick)
+    if mode == "on":
+        antirole = True
+        return await ctx.send("Antirole activé")
 
-    if executor and not allowed(executor.id):
+    if mode == "off":
+        antirole = False
+        return await ctx.send("Antirole désactivé")
 
-        try:
-            await member.guild.ban(executor, reason="Anti-Nuke KICK")
-        except:
-            pass
+    await ctx.send("Utilise +antirole on/off")
 
 
-# ======================
-# ANTI SALON DELETE
-# ======================
-@bot.event
-async def on_guild_channel_delete(channel):
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def antirank(ctx, mode=None):
 
-    executor = await get_executor(channel.guild, discord.AuditLogAction.channel_delete)
+    global antirank
 
-    if executor and not allowed(executor.id):
+    if mode == "on":
+        antirank = True
+        return await ctx.send("Antirank activé")
 
-        try:
-            await executor.ban(reason="Anti-Nuke CHANNEL")
-        except:
-            pass
+    if mode == "off":
+        antirank = False
+        return await ctx.send("Antirank désactivé")
 
-
-# ======================
-# ANTI ROLE DELETE
-# ======================
-@bot.event
-async def on_guild_role_delete(role):
-
-    executor = await get_executor(role.guild, discord.AuditLogAction.role_delete)
-
-    if executor and not allowed(executor.id):
-
-        try:
-            await executor.ban(reason="Anti-Nuke ROLE")
-        except:
-            pass
+    await ctx.send("Utilise +antirank on/off")
 
 
-# ======================
-# ANTI @EVERYONE
-# ======================
-@bot.event
-async def on_message(message):
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def antisalon(ctx, mode=None):
 
-    if message.mention_everyone:
+    global antisalon
 
-        try:
-            await message.delete()
-            await message.author.timeout(
-                discord.utils.utcnow() + datetime.timedelta(minutes=10)
-            )
-        except:
-            pass
+    if mode == "on":
+        antisalon = True
+        return await ctx.send("Antisalons activé")
 
-    await bot.process_commands(message)
+    if mode == "off":
+        antisalon = False
+        return await ctx.send("Antisalons désactivé")
+
+    await ctx.send("Utilise +antisalon on/off")
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def antieveryone(ctx, mode=None):
+
+    global antieveryone
+
+    if mode == "on":
+        antieveryone = True
+        return await ctx.send("Antieveryone activé")
+
+    if mode == "off":
+        antieveryone = False
+        return await ctx.send("Antieveryone désactivé")
+
+    await ctx.send("Utilise +antieveryone on/off")
 
 @bot.command()
 async def wl(ctx, member: discord.Member):
