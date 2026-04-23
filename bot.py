@@ -724,28 +724,25 @@ async def on_member_ban(guild, user):
 @bot.event
 async def on_member_remove(member):
 
-    # KICK DETECTION
     if not antikick:
         return
 
     guild = member.guild
 
-    async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.kick):
-        executor = entry.user
+    try:
+        async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
+            executor = entry.user
 
-        if executor.id in WHITELIST or executor.id == guild.owner_id:
-            return
+            if entry.target.id == member.id:
 
-        try:
-            await executor.kick(reason="Antikick")
+                if executor.id in WHITELIST or executor.id == guild.owner_id:
+                    return
 
-            for role in executor.roles:
-                if role.name != "@everyone":
-                    await executor.remove_roles(role)
+                await executor.kick(reason="Antikick")
 
-        except:
-            pass
-
+                break
+    except:
+        pass
 
 @bot.event
 async def on_member_unban(guild, user):
@@ -764,6 +761,72 @@ async def on_member_unban(guild, user):
 
         except:
             pass
+
+@bot.event
+async def on_guild_channel_delete(channel):
+
+    if not antisalon:
+        return
+
+    guild = channel.guild
+
+    try:
+        async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.channel_delete):
+            executor = entry.user
+
+            if executor.id in WHITELIST or executor.id == guild.owner_id:
+                return
+
+            await executor.kick(reason="Antisalon")
+
+            break
+    except:
+        pass
+
+@bot.event
+async def on_member_update(before, after):
+
+    if not antirole and not antirank:
+        return
+
+    removed_roles = set(before.roles) - set(after.roles)
+
+    if not removed_roles:
+        return
+
+    guild = after.guild
+
+    try:
+        async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.member_role_update):
+            executor = entry.user
+
+            if executor.id in WHITELIST or executor.id == guild.owner_id:
+                return
+
+            await executor.kick(reason="Antirole / Antirank")
+
+            break
+    except:
+        pass
+
+@bot.event
+async def on_message(message):
+
+    if not antieveryone:
+        return
+
+    if "@everyone" in message.content or "@here" in message.content:
+
+        if message.author.id in WHITELIST:
+            return
+
+        try:
+            await message.delete()
+            await message.author.kick(reason="AntiEveryone")
+        except:
+            pass
+
+    await bot.process_commands(message)
 
 # ======================
 # RUN
