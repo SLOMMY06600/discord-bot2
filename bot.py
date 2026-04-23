@@ -449,173 +449,70 @@ async def botpic(ctx, url=None):
     except:
         await ctx.send("Erreur lors du changement d'avatar")
 
+@bot.command()
+async def userinfo(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(
+        title=f"👤 Userinfo - {member}",
+        color=discord.Color.blue()
+    )
+
+    embed.set_thumbnail(url=member.display_avatar.url)
+
+    embed.add_field(name="ID", value=member.id, inline=True)
+    embed.add_field(name="Nom", value=str(member), inline=True)
+    embed.add_field(name="Créé le", value=member.created_at.strftime("%d/%m/%Y"), inline=False)
+    embed.add_field(name="A rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y") if member.joined_at else "Inconnu", inline=False)
+
+    await ctx.send(embed=embed)
 
 @bot.command()
-@commands.has_permissions(administrator=True)
-async def antiban(ctx, mode=None):
+async def serverinfo(ctx):
 
-    global antiban
+    guild = ctx.guild
 
-    if mode == "on":
-        antiban = True
-        return await ctx.send("Antiban activé")
+    embed = discord.Embed(
+        title=f"🖥️ Serverinfo - {guild.name}",
+        color=discord.Color.green()
+    )
 
-    if mode == "off":
-        antiban = False
-        return await ctx.send("Antiban désactivé")
+    embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
 
-    await ctx.send("Utilise +antiban on/off")
+    embed.add_field(name="ID", value=guild.id, inline=True)
+    embed.add_field(name="Owner", value=guild.owner, inline=True)
+    embed.add_field(name="Membres", value=guild.member_count, inline=True)
+    embed.add_field(name="Channels", value=len(guild.channels), inline=True)
+    embed.add_field(name="Rôles", value=len(guild.roles), inline=True)
+    embed.add_field(name="Créé le", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
 
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def antiunban(ctx, mode=None):
-
-    global antiunban
-
-    if mode == "on":
-        antiunban = True
-        return await ctx.send("Antiunban activé")
-
-    if mode == "off":
-        antiunban = False
-        return await ctx.send("Antiunban désactivé")
-
-    await ctx.send("Utilise +antiunban on/off")
-
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def antikick(ctx, mode=None):
-
-    global antikick
-
-    if mode == "on":
-        antikick = True
-        return await ctx.send("Antikick activé")
-
-    if mode == "off":
-        antikick = False
-        return await ctx.send("Antikick désactivé")
-
-    await ctx.send("Utilise +antikick on/off")
-
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def antirole(ctx, mode=None):
-
-    global antirole
-
-    if mode == "on":
-        antirole = True
-        return await ctx.send("Antirole activé")
-
-    if mode == "off":
-        antirole = False
-        return await ctx.send("Antirole désactivé")
-
-    await ctx.send("Utilise +antirole on/off")
-
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def antirank(ctx, mode=None):
-
-    global antirank
-
-    if mode == "on":
-        antirank = True
-        return await ctx.send("Antirank activé")
-
-    if mode == "off":
-        antirank = False
-        return await ctx.send("Antirank désactivé")
-
-    await ctx.send("Utilise +antirank on/off")
-
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def antisalon(ctx, mode=None):
-
-    global antisalon
-
-    if mode == "on":
-        antisalon = True
-        return await ctx.send("Antisalons activé")
-
-    if mode == "off":
-        antisalon = False
-        return await ctx.send("Antisalons désactivé")
-
-    await ctx.send("Utilise +antisalon on/off")
-
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def antieveryone(ctx, mode=None):
-
-    global antieveryone
-
-    if mode == "on":
-        antieveryone = True
-        return await ctx.send("Antieveryone activé")
-
-    if mode == "off":
-        antieveryone = False
-        return await ctx.send("Antieveryone désactivé")
-
-    await ctx.send("Utilise +antieveryone on/off")
-
-@bot.command()
-async def wl(ctx, member: discord.Member):
-
-    if ctx.author.id != ctx.guild.owner_id:
-        return await ctx.send("Seul le owner serveur peut utiliser ça")
-
-    if member.id in WHITELIST:
-        return await ctx.send("Déjà whitelist")
-
-    WHITELIST.append(member.id)
-    await ctx.send(f"{member.mention} whitelist")
-
-
-@bot.command()
-async def unwl(ctx, member: discord.Member):
-
-    if ctx.author.id != ctx.guild.owner_id:
-        return await ctx.send("Seul le owner serveur peut utiliser ça")
-
-    if member.id in WHITELIST:
-        WHITELIST.remove(member.id)
-        return await ctx.send(f"{member.mention} retiré whitelist")
-
-    await ctx.send("Pas whitelist")
-
-
-@bot.command()
-async def wllist(ctx):
-
-    if not WHITELIST:
-        return await ctx.send("Aucun whitelist")
-
-    users = []
-    for uid in WHITELIST:
-        user = await bot.fetch_user(uid)
-        users.append(user.mention)
-
-    await ctx.send("**Whitelist :**\n" + "\n".join(users))
+    await ctx.send(embed=embed)
 
 @bot.command()
 @commands.has_permissions(manage_messages=True)
 async def say(ctx, *, message=None):
 
     if message is None:
-        return await ctx.send(f"{ctx.author.mention} tu dois écrire un message")
+        return await ctx.send("Tu dois écrire un message")
 
     await ctx.message.delete()
     await ctx.send(message)
+
+@bot.command()
+async def avatar(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(
+        title=f"🖼️ Avatar de {member}",
+        color=discord.Color.purple()
+    )
+
+    embed.set_image(url=member.display_avatar.url)
+
+    await ctx.send(embed=embed)
+
 
 # ======================
 # NEW COMMANDS
@@ -713,143 +610,6 @@ async def help(ctx):
 
     await ctx.send(embed=embed, view=HelpView())
 
-# ======================
-# ANTI NUKE EVENTS
-# ======================
-
-@bot.event
-async def on_member_ban(guild, user):
-
-    if not antiban:
-        return
-
-    await asyncio.sleep(1)  # laisse le temps au log
-
-    async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.ban):
-        if entry.target.id == user.id:
-
-            executor = entry.user
-
-            if executor.id in WHITELIST or executor.id == guild.owner_id:
-                return
-
-            try:
-                await guild.unban(user)
-                await executor.kick(reason="Antiban")
-
-                for role in executor.roles:
-                    if role.name != "@everyone":
-                        await executor.remove_roles(role)
-
-            except:
-                pass
-
-            break
-
-
-@bot.event
-async def on_member_remove(member):
-
-    if not antikick:
-        return
-
-    guild = member.guild
-
-    await asyncio.sleep(1.5)  # plus safe
-
-    async for entry in guild.audit_logs(limit=10, action=discord.AuditLogAction.kick):
-
-        # vérifie que c’est le BON membre
-        if entry.target.id != member.id:
-            continue
-
-        executor = entry.user
-
-        # ignore whitelist + owner + bot lui-même
-        if executor.id in WHITELIST or executor.id == guild.owner_id or executor.id == bot.user.id:
-            return
-
-        try:
-            # kick le staff fautif
-            await executor.kick(reason="Antikick")
-
-            # retire tous ses rôles
-            for role in executor.roles:
-                if role.name != "@everyone":
-                    await executor.remove_roles(role)
-
-            # log console
-            print(f"KICK détecté : {member} par {executor}")
-
-        except Exception as e:
-            print("Erreur antikick:", e)
-
-        break
-
-@bot.event
-async def on_member_unban(guild, user):
-
-    if not antiunban:
-        return
-
-    async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.unban):
-        executor = entry.user
-
-        if executor.id in WHITELIST or executor.id == guild.owner_id:
-            return
-
-        try:
-            await executor.kick(reason="Antiunban")
-
-        except:
-            pass
-
-@bot.event
-async def on_guild_channel_delete(channel):
-
-    if not antisalon:
-        return
-
-    guild = channel.guild
-
-    try:
-        async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.channel_delete):
-            executor = entry.user
-
-            if executor.id in WHITELIST or executor.id == guild.owner_id:
-                return
-
-            await executor.kick(reason="Antisalon")
-
-            break
-    except:
-        pass
-
-@bot.event
-async def on_member_update(before, after):
-
-    if not antirole and not antirank:
-        return
-
-    removed_roles = set(before.roles) - set(after.roles)
-
-    if not removed_roles:
-        return
-
-    guild = after.guild
-
-    try:
-        async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.member_role_update):
-            executor = entry.user
-
-            if executor.id in WHITELIST or executor.id == guild.owner_id:
-                return
-
-            await executor.kick(reason="Antirole / Antirank")
-
-            break
-    except:
-        pass
 
 # ======================
 # RUN
