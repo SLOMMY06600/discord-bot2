@@ -569,32 +569,40 @@ async def serverinfo(ctx):
     guild = ctx.guild
 
     if guild is None:
-        return await ctx.send("❌ Utilisable uniquement dans un serveur")
+        return await ctx.send("❌ Commande utilisable uniquement sur un serveur")
 
     embed = discord.Embed(
         title=f"📊 {guild.name}",
         color=discord.Color.blue()
     )
 
+    # Icône serveur (safe)
     if guild.icon:
         embed.set_thumbnail(url=guild.icon.url)
 
+    # Owner safe (évite bug None)
+    owner = guild.owner.mention if guild.owner else "Inconnu"
+
     embed.add_field(name="🆔 ID", value=str(guild.id), inline=True)
-    embed.add_field(name="👑 Owner", value=guild.owner.mention if guild.owner else "Inconnu", inline=True)
+    embed.add_field(name="👑 Owner", value=owner, inline=True)
     embed.add_field(name="👥 Membres", value=str(guild.member_count), inline=True)
 
     embed.add_field(name="💬 Salons texte", value=str(len(guild.text_channels)), inline=True)
     embed.add_field(name="🔊 Salons vocaux", value=str(len(guild.voice_channels)), inline=True)
     embed.add_field(name="📁 Catégories", value=str(len(guild.categories)), inline=True)
 
-    embed.add_field(name="📅 Créé le", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
+    embed.add_field(
+        name="📅 Créé le",
+        value=guild.created_at.strftime("%d/%m/%Y"),
+        inline=False
+    )
 
     embed.set_footer(text=f"Demandé par {ctx.author}")
 
     await ctx.send(embed=embed)
 
 @bot.command()
-async def userinfo(ctx, member: discord.Member = True):
+async def userinfo(ctx, member: discord.Member = None):
 
     member = member or ctx.author
 
