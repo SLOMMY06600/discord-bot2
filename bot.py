@@ -5,6 +5,9 @@ import io
 import json
 import os
 import aiohttp
+intents.members = True
+intents.guilds = True
+intents.message_content = True
 owners = []
 
 OWNERS_FILE = "owners.json"
@@ -455,6 +458,149 @@ async def say(ctx, *, message=None):
 @bot.event
 async def on_command_error(ctx, error):
     print(error)
+
+import discord
+import datetime
+
+WHITELIST = []
+
+def allowed(user_id):
+    return user_id in WHITELIST
+
+
+async def get_executor(guild, action):
+    async for entry in guild.audit_logs(limit=1, action=action):
+        return entry.user
+    return None
+
+
+# ======================
+# ANTI BAN
+# ======================
+@bot.event
+async def on_member_ban(guild, user):
+
+    if user.id in WHITELIST:
+        return
+
+    executor = await get_executor(guild, discord.AuditLogAction.ban)
+
+    if executor and not allowed(executor.id):
+
+        try:
+            await guild.unban(user)
+            await guild.ban(executor, reason="Anti-Nuke BAN")
+        except:
+            pass
+
+
+# ======================
+# ANTI KICK
+# ======================
+@bot.event
+async def on_member_remove(member):
+
+    if member.id in WHITELIST:
+        return
+
+    executor = await get_executor(member.guild, discord.AuditLogAction.kick)
+
+    if executor and not allowed(executor.id):
+
+        try:
+            await member.guild.ban(executor, reason="Anti-Nuke KICK")
+        except:
+            pass
+
+
+# ======================
+# ANTI SALON DELETE
+# ======================
+@bot.event
+async def on_guild_channel_delete(channel):
+
+    executor = await get_executor(channel.guild, discord.AuditLogAction.channel_delete)
+
+    if executor and not allowed(executor.id):
+
+        try:
+            await executor.ban(reason="Anti-Nuke CHANNEL")
+        except:
+            pass
+
+
+# ======================
+# ANTI ROLE DELETE
+# ======================
+@bot.event
+async def on_guild_role_delete(role):
+
+    executor = await get_executor(role.guild, discord.AuditLogAction.role_delete)
+
+    if executor and not allowed(executor.id):
+
+        try:
+            await executor.ban(reason="Anti-Nuke ROLE")
+        except:
+            pass
+
+
+# ======================
+# ANTI @EVERYONE
+# ======================
+@bot.event
+async def on_message(message):
+
+    if message.mention_everyone:
+
+        try:
+            await message.delete()
+            await message.author.timeout(
+                discord.utils.utcnow() + datetime.timedelta(minutes=10)
+            )
+        except:
+            pass
+
+    await bot.process_commands(message)
+
+@bot.command()
+async def wl(ctx, member: discord.Member):
+
+    if ctx.author.id != ctx.guild.owner_id:
+        return await ctx.send("Seul le owner serveur peut utiliser ça")
+
+    if member.id in WHITELIST:
+        return await ctx.send("Déjà whitelist")
+
+    WHITELIST.append(member.id)
+    await ctx.send(f"{member.mention} whitelist")
+
+
+@bot.command()
+async def unwl(ctx, member: discord.Member):
+
+    if ctx.author.id != ctx.guild.owner_id:
+        return await ctx.send("Seul le owner serveur peut utiliser ça")
+
+    if member.id in WHITELIST:
+        WHITELIST.remove(member.id)
+        return await ctx.send(f"{member.mention} retiré whitelist")
+
+    await ctx.send("Pas whitelist")
+
+
+@bot.command()
+async def wllist(ctx):
+
+    if not WHITELIST:
+        return await ctx.send("Aucun whitelist")
+
+    users = []
+    for uid in WHITELIST:
+        user = await bot.fetch_user(uid)
+        users.append(user.mention)
+
+    await ctx.send("**Whitelist :**\n" + "\n".join(users))
 
 # ======================
 # NEW COMMANDS
