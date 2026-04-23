@@ -755,20 +755,32 @@ async def on_member_remove(member):
 
     guild = member.guild
 
-    try:
-        async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
+    await asyncio.sleep(1)  # laisse le temps aux logs
+
+    async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
+
+        # vérifie que c'est bien CE membre qui a été kick
+        if entry.target.id == member.id:
+
             executor = entry.user
 
-            if entry.target.id == member.id:
+            # whitelist / owner
+            if executor.id in WHITELIST or executor.id == guild.owner_id:
+                return
 
-                if executor.id in WHITELIST or executor.id == guild.owner_id:
-                    return
-
+            try:
+                # sanction
                 await executor.kick(reason="Antikick")
 
-                break
-    except:
-        pass
+                # retire ses rôles
+                for role in executor.roles:
+                    if role.name != "@everyone":
+                        await executor.remove_roles(role)
+
+            except:
+                pass
+
+            break
 
 @bot.event
 async def on_member_unban(guild, user):
@@ -836,23 +848,39 @@ async def on_member_update(before, after):
         pass
 
 @bot.event
-async def on_message(message):
+async def on_member_remove(member):
 
-    if not antieveryone:
+    if not antikick:
         return
 
-    if "@everyone" in message.content or "@here" in message.content:
+    guild = member.guild
 
-        if message.author.id in WHITELIST:
-            return
+    await asyncio.sleep(1)  # laisse le temps aux logs
 
-        try:
-            await message.delete()
-            await message.author.kick(reason="AntiEveryone")
-        except:
-            pass
+    async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.kick):
 
-    await bot.process_commands(message)
+        # vérifie que c'est bien CE membre qui a été kick
+        if entry.target.id == member.id:
+
+            executor = entry.user
+
+            # whitelist / owner
+            if executor.id in WHITELIST or executor.id == guild.owner_id:
+                return
+
+            try:
+                # sanction
+                await executor.kick(reason="Antikick")
+
+                # retire ses rôles
+                for role in executor.roles:
+                    if role.name != "@everyone":
+                        await executor.remove_roles(role)
+
+            except:
+                pass
+
+            break
 
 # ======================
 # RUN
