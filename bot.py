@@ -478,10 +478,10 @@ async def serverinfo(ctx):
     guild = ctx.guild
 
     if guild is None:
-        return await ctx.send("❌ Commande utilisable uniquement sur un serveur")
+        return await ctx.send("Commande utilisable uniquement sur un serveur")
 
     embed = discord.Embed(
-        title=f"📊 {guild.name}",
+        title=f"Infomation Serveur",
         color=discord.Color.blue()
     )
 
@@ -497,6 +497,36 @@ async def serverinfo(ctx):
     embed.add_field(name="💬 Text", value=str(len(guild.text_channels)), inline=True)
     embed.add_field(name="🔊 Vocal", value=str(len(guild.voice_channels)), inline=True)
     embed.add_field(name="📁 Catégories", value=str(len(guild.categories)), inline=True)
+
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def userinfo(ctx, member: discord.Member = None):
+
+    member = member or ctx.author
+
+    embed = discord.Embed(
+        title=f"👤 Userinfo - {member}",
+        color=discord.Color.blurple()
+    )
+
+    embed.set_thumbnail(url=member.display_avatar.url)
+
+    embed.add_field(name="🆔 ID", value=member.id, inline=True)
+    embed.add_field(name="📅 Compte créé", value=member.created_at.strftime("%d/%m/%Y"), inline=True)
+
+    if member.joined_at:
+        embed.add_field(name="📥 Rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y"), inline=True)
+    else:
+        embed.add_field(name="📥 Rejoint le serveur", value="Inconnu", inline=True)
+
+    roles = [role.mention for role in member.roles if role != ctx.guild.default_role]
+    embed.add_field(
+        name=f"🎭 Rôles ({len(roles)})",
+        value=", ".join(roles) if roles else "Aucun rôle",
+        inline=False
+    )
 
     embed.set_footer(text=f"Demandé par {ctx.author}")
 
