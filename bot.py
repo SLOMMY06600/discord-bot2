@@ -441,21 +441,19 @@ async def botpic(ctx, url=None):
         await ctx.send("Erreur lors du changement d'avatar")
 
 @bot.command()
-async def say(ctx, *, message=None):
+@commands.has_permissions(manage_messages=True)
+async def say(ctx, *, message: str = None):
+
     if not message:
-        return await ctx.send("Tu dois écrire un message !")
+        return await ctx.send("❌ Tu dois écrire un message")
 
     try:
         await ctx.message.delete()
-    except:
+    except discord.Forbidden:
         pass
 
     await ctx.send(message)
-
-@bot.event
-async def on_command_error(ctx, error):
-    print(error)
-
+    
 # ======================
 # NEW COMMANDS
 # ======================
