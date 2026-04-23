@@ -526,7 +526,7 @@ async def help(ctx):
     pages = view.get_pages()
 
     embed = pages[0]
-    embed.set_footer(text="Page 1/3")
+    embed.set_footer(text="📄 Page 1/3 • Bot Help Menu")
 
     await ctx.send(embed=embed, view=view)
 
@@ -537,14 +537,15 @@ class HelpView(discord.ui.View):
 
     def get_pages(self):
 
+        # ================= PAGE 1 =================
         page1 = discord.Embed(
-            title="📖 HELP MENU",
-            description="🎫 Tickets & 🧰 Utilitaires",
+            title="📖 **HELP MENU**",
+            description="🎫 **Tickets** • 🧰 **Utilitaires**",
             color=discord.Color.dark_blue()
         )
 
         page1.add_field(
-            name="🎫 TICKETS",
+            name="🎫 **TICKETS**",
             value=(
                 "**+ticket**\n➜ Ouvre le menu des tickets\n\n"
                 "**+config**\n➜ Configure les tickets (admin)\n\n"
@@ -556,24 +557,25 @@ class HelpView(discord.ui.View):
         )
 
         page1.add_field(
-            name="🧰 UTILITAIRES",
+            name="🧰 **UTILITAIRES**",
             value=(
                 "**+avatar**\n➜ Affiche l’avatar d’un utilisateur\n\n"
                 "**+userinfo**\n➜ Infos utilisateur\n\n"
-                "**+serverinfo**\n➜ Infos serveur\n\n"
+                "**+serverinfo**\n➜ Infos du serveur\n\n"
                 "**+say**\n➜ Fait parler le bot"
             ),
             inline=False
         )
 
+        # ================= PAGE 2 =================
         page2 = discord.Embed(
-            title="📖 HELP MENU",
-            description="🛡️ Modération",
+            title="📖 **HELP MENU**",
+            description="🛡️ **Modération**",
             color=discord.Color.dark_blue()
         )
 
         page2.add_field(
-            name="🛡️ MODÉRATION",
+            name="🛡️ **MODÉRATION**",
             value=(
                 "**+kick**\n➜ Expulse un membre\n\n"
                 "**+ban**\n➜ Bannit un membre\n\n"
@@ -584,31 +586,32 @@ class HelpView(discord.ui.View):
                 "**+lock**\n➜ Verrouille un salon\n\n"
                 "**+unlock**\n➜ Déverrouille un salon\n\n"
                 "**+mute**\n➜ Mute un membre\n\n"
-                "**+unmute**\n➜ Retire le mute"
+                "**+unmute**\n➜ Unmute un membre"
             ),
             inline=False
         )
 
+        # ================= PAGE 3 =================
         page3 = discord.Embed(
-            title="📖 HELP MENU",
-            description="👑 Owner & Bot",
+            title="📖 **HELP MENU**",
+            description="👑 **Owner & Bot**",
             color=discord.Color.dark_blue()
         )
 
         page3.add_field(
-            name="👑 OWNER",
+            name="👑 **OWNER**",
             value=(
-                "**+owner**\n➜ Ajoute un owner bot\n"
-                "**+unowner**\n➜ Retire un owner bot\n"
+                "**+owner**\n➜ Ajoute un owner bot\n\n"
+                "**+unowner**\n➜ Retire un owner bot\n\n"
                 "**+ownerlist**\n➜ Liste des owners"
             ),
             inline=False
         )
 
         page3.add_field(
-            name="🤖 BOT",
+            name="🤖 **BOT**",
             value=(
-                "**+botname**\n➜ Change le nom du bot\n"
+                "**+botname**\n➜ Change le nom du bot\n\n"
                 "**+botpic**\n➜ Change l’avatar du bot"
             ),
             inline=False
@@ -620,11 +623,11 @@ class HelpView(discord.ui.View):
         pages = self.get_pages()
 
         embed = pages[self.page]
-        embed.set_footer(text=f"Page {self.page + 1}/3")
+        embed.set_footer(text=f"📄 Page {self.page + 1}/3 • Bot Help Menu")
 
         await interaction.response.edit_message(embed=embed, view=self)
 
-    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="⬅️ Précédent", style=discord.ButtonStyle.primary)
     async def back(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if self.page > 0:
@@ -632,7 +635,7 @@ class HelpView(discord.ui.View):
 
         await self.update(interaction)
 
-    @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="➡️ Suivant", style=discord.ButtonStyle.primary)
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         if self.page < 2:
