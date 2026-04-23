@@ -600,27 +600,41 @@ async def serverinfo(ctx):
     embed.set_footer(text=f"Demandé par {ctx.author}")
 
     await ctx.send(embed=embed)
+    
 
 @bot.command()
 async def userinfo(ctx, member: discord.Member = None):
 
-    member = member or ctx.author
+    # fallback si rien donné
+    if member is None:
+        member = ctx.author
 
     embed = discord.Embed(
         title=f"👤 Userinfo - {member}",
         color=discord.Color.blurple()
     )
 
+    # avatar safe
     embed.set_thumbnail(url=member.display_avatar.url)
 
+    # infos principales
     embed.add_field(name="🆔 ID", value=str(member.id), inline=True)
-    embed.add_field(name="📅 Compte créé", value=member.created_at.strftime("%d/%m/%Y"), inline=True)
+    embed.add_field(
+        name="📅 Compte créé",
+        value=member.created_at.strftime("%d/%m/%Y"),
+        inline=True
+    )
 
-    if member.joined_at:
-        embed.add_field(name="📥 Rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y"), inline=True)
-    else:
-        embed.add_field(name="📥 Rejoint le serveur", value="Inconnu", inline=True)
+    embed.add_field(
+        name="📥 Rejoint le serveur",
+        value=member.joined_at.strftime("%d/%m/%Y") if member.joined_at else "Inconnu",
+        inline=True
+    )
 
+    embed.add_field(name="🤖 Bot", value="Oui" if member.bot else "Non", inline=True)
+    embed.add_field(name="🔝 Rôle principal", value=member.top_role.mention, inline=True)
+
+    # rôles safe
     roles = [role.mention for role in member.roles if role != ctx.guild.default_role]
     embed.add_field(
         name=f"🎭 Rôles ({len(roles)})",
