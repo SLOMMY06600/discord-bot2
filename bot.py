@@ -5,6 +5,7 @@ import io
 import json
 import os
 import aiohttp
+import asyncio
 antiban = True
 antiunban = True
 antikick = True
@@ -13,7 +14,7 @@ antirank = True
 antisalon = True
 antieveryone = True
 owners = []
-Whitelist = []
+WHITELIST = []
 
 OWNERS_FILE = "owners.json"
 
@@ -606,6 +607,16 @@ async def wllist(ctx):
 
     await ctx.send("**Whitelist :**\n" + "\n".join(users))
 
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def say(ctx, *, message=None):
+
+    if message is None:
+        return await ctx.send(f"{ctx.author.mention} tu dois écrire un message")
+
+    await ctx.message.delete()
+    await ctx.send(message)
+
 # ======================
 # NEW COMMANDS
 # ======================
@@ -712,22 +723,28 @@ async def on_member_ban(guild, user):
     if not antiban:
         return
 
-    async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.ban):
-        executor = entry.user
+    await asyncio.sleep(1)  # laisse le temps au log
 
-        if executor.id in WHITELIST or executor.id == guild.owner_id:
-            return
+    async for entry in guild.audit_logs(limit=5, action=discord.AuditLogAction.ban):
+        if entry.target.id == user.id:
 
-        try:
-            await guild.unban(user)
-            await executor.kick(reason="Antiban")
+            executor = entry.user
 
-            for role in executor.roles:
-                if role.name != "@everyone":
-                    await executor.remove_roles(role)
+            if executor.id in WHITELIST or executor.id == guild.owner_id:
+                return
 
-        except:
-            pass
+            try:
+                await guild.unban(user)
+                await executor.kick(reason="Antiban")
+
+                for role in executor.roles:
+                    if role.name != "@everyone":
+                        await executor.remove_roles(role)
+
+            except:
+                pass
+
+            break
 
 
 @bot.event
