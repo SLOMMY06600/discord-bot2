@@ -519,16 +519,16 @@ class HelpSelect(discord.ui.Select):
         elif choice == "Moderation":
             embed.title = "Moderation"
             embed.description = (
-                "**+Kick**\nExpulse Un Membre\n\n"
-                "**+Ban**\nBannit Un Membre\n\n"
-                "**+Unban**\nDébannit Un Utilisateur\n\n"
-                "**+Clear**\nSupprime Des Messages\n\n"
-                "**+Addrole**\nAjoute Un Rôle\n\n"
-                "**+Delrole**\nRetire Un Rôle\n\n"
-                "**+Lock**\nVerrouille Un Salon\n\n"
-                "**+Unlock**\nDéverrouille Un Salon\n\n"
-                "**+Mute**\nRend Muet Un Membre\n\n"
-                "**+Unmute**\nRetire Le Mute"
+                "**+Kick**\nExpulse Un Membre            \n\n"
+                "**+Ban**\nBannit Un Membre              \n\n"
+                "**+Unban**\nDébannit Un Utilisateur     \n\n"
+                "**+Clear**\nSupprime Des Messages       \n\n"
+                "**+Addrole**\nAjoute Un Rôle            \n\n"
+                "**+Delrole**\nRetire Un Rôle            \n\n"
+                "**+Lock**\nVerrouille Un Salon          \n\n"
+                "**+Unlock**\nDéverrouille Un Salon      \n\n"
+                "**+Mute**\nRend Muet Un Membre          \n\n"
+                "**+Unmute**\nRetire Le Mute                 "
             )
 
         elif choice == "Owner":
@@ -552,7 +552,7 @@ class HelpView(discord.ui.View):
 async def help(ctx):
 
     embed = discord.Embed(
-        title="Help Menu",
+        title="Help Menu                               ",
         description="Choisis Une Catégorie Dans Le Menu",
         color=discord.Color.dark_blue()
     )
