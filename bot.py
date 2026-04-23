@@ -477,32 +477,30 @@ async def serverinfo(ctx):
 
     guild = ctx.guild
 
+    if guild is None:
+        return await ctx.send("❌ Commande utilisable uniquement sur un serveur")
+
     embed = discord.Embed(
-        title=f"📊 Infos du serveur - {guild.name}",
+        title=f"📊 {guild.name}",
         color=discord.Color.blue()
     )
 
-    embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
 
-    embed.add_field(name="🆔 ID", value=guild.id, inline=True)
-    embed.add_field(name="👑 Owner", value=guild.owner.mention if guild.owner else "Inconnu", inline=True)
-    embed.add_field(name="👥 Membres", value=guild.member_count, inline=True)
-    embed.add_field(name="🚀 Boost", value=guild.premium_subscription_count, inline=True)
-    embed.add_field(name="📈 Niveau", value=guild.premium_tier, inline=True)
+    owner = guild.owner.mention if guild.owner else "Inconnu"
 
-    embed.add_field(name="💬 Salons texte", value=len(guild.text_channels), inline=True)
-    embed.add_field(name="🔊 Salons vocal", value=len(guild.voice_channels), inline=True)
-    embed.add_field(name="📁 Catégories", value=len(guild.categories), inline=True)
+    embed.add_field(name="👑 Owner", value=owner, inline=True)
+    embed.add_field(name="👥 Membres", value=str(guild.member_count), inline=True)
+    embed.add_field(name="🆔 ID", value=str(guild.id), inline=True)
 
-    embed.add_field(name="📅 Créé le", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
+    embed.add_field(name="💬 Text", value=str(len(guild.text_channels)), inline=True)
+    embed.add_field(name="🔊 Vocal", value=str(len(guild.voice_channels)), inline=True)
+    embed.add_field(name="📁 Catégories", value=str(len(guild.categories)), inline=True)
 
     embed.set_footer(text=f"Demandé par {ctx.author}")
 
     await ctx.send(embed=embed)
-
-@bot.command()
-async def test(ctx):
-    await ctx.send("OK COMMANDS WORK")
     
 # ======================
 # NEW COMMANDS
