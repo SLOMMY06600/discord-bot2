@@ -693,6 +693,17 @@ async def help(ctx):
 
     await ctx.send(embed=embed, view=HelpView())
 
+class TicketView(discord.ui.View):
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user.id not in owners and interaction.user.id != interaction.guild.owner_id:
+            await interaction.response.send_message(
+                "❌ Vous n'avez pas l'autorisation d'utiliser ce menu",
+                ephemeral=True
+            )
+            return False
+        return True
+
 # ======================
 # ANTI NUKE EVENTS
 # ======================
