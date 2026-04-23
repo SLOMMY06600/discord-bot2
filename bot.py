@@ -5,9 +5,6 @@ import io
 import json
 import os
 import aiohttp
-intents.members = True
-intents.guilds = True
-intents.message_content = True
 antiban = True
 antiunban = True
 antikick = True
@@ -16,6 +13,7 @@ antirank = True
 antisalon = True
 antieveryone = True
 owners = []
+Whitelist = []
 
 OWNERS_FILE = "owners.json"
 
@@ -694,6 +692,78 @@ async def help(ctx):
     )
 
     await ctx.send(embed=embed, view=HelpView())
+
+# ======================
+# ANTI NUKE EVENTS
+# ======================
+
+@bot.event
+async def on_member_ban(guild, user):
+
+    if not antiban:
+        return
+
+    async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.ban):
+        executor = entry.user
+
+        if executor.id in WHITELIST or executor.id == guild.owner_id:
+            return
+
+        try:
+            await guild.unban(user)
+            await executor.kick(reason="Antiban")
+
+            for role in executor.roles:
+                if role.name != "@everyone":
+                    await executor.remove_roles(role)
+
+        except:
+            pass
+
+
+@bot.event
+async def on_member_remove(member):
+
+    # KICK DETECTION
+    if not antikick:
+        return
+
+    guild = member.guild
+
+    async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.kick):
+        executor = entry.user
+
+        if executor.id in WHITELIST or executor.id == guild.owner_id:
+            return
+
+        try:
+            await executor.kick(reason="Antikick")
+
+            for role in executor.roles:
+                if role.name != "@everyone":
+                    await executor.remove_roles(role)
+
+        except:
+            pass
+
+
+@bot.event
+async def on_member_unban(guild, user):
+
+    if not antiunban:
+        return
+
+    async for entry in guild.audit_logs(limit=1, action=discord.AuditLogAction.unban):
+        executor = entry.user
+
+        if executor.id in WHITELIST or executor.id == guild.owner_id:
+            return
+
+        try:
+            await executor.kick(reason="Antiunban")
+
+        except:
+            pass
 
 # ======================
 # RUN
