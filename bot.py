@@ -460,65 +460,6 @@ async def on_command_error(ctx, error):
 # NEW COMMANDS
 # ======================
 
-@bot.command()
-async def avatar(ctx, member: discord.Member = None):
-
-    member = member or ctx.author
-
-    embed = discord.Embed(title="Avatar")
-    embed.set_image(url=member.display_avatar.url)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def userinfo(ctx, member: discord.Member = None):
-
-    member = member or ctx.author
-
-    embed = discord.Embed(title="User Info")
-    embed.add_field(name="Nom", value=member.name)
-    embed.add_field(name="ID", value=member.id)
-    embed.add_field(name="Créé le", value=member.created_at.strftime("%Y-%m-%d"))
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def serverinfo(ctx):
-
-    guild = ctx.guild
-
-    embed = discord.Embed(title="Server Info")
-    embed.add_field(name="Nom", value=guild.name)
-    embed.add_field(name="Membres", value=guild.member_count)
-    embed.add_field(name="Owner", value=guild.owner)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def adduser(ctx, member: discord.Member):
-
-    await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
-    await ctx.send(f"{member.mention} à été ajouté au ticket")
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def rename(ctx, *, name):
-
-    await ctx.channel.edit(name=name)
-    await ctx.send(f"Le ticket à été renommé en {name}")
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def deluser(ctx, member: discord.Member):
-
-    await ctx.channel.set_permissions(member, overwrite=None)
-    await ctx.send(f"{member.mention} à été retiré du ticket")
-
-# ======================
-# HELP
-# ======================
-
 class HelpSelect(discord.ui.Select):
     def __init__(self):
 
@@ -536,9 +477,11 @@ class HelpSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
 
-        embed = discord.Embed(color=discord.Color.default())
+        embed = discord.Embed(color=discord.Color.dark_blue())
 
-        if self.values[0] == "Tickets":
+        choice = self.values[0]
+
+        if choice == "Tickets":
             embed.title = "Tickets"
             embed.description = (
                 "**+Ticket**\nOuvre Le Menu Des Tickets\n\n"
@@ -548,7 +491,7 @@ class HelpSelect(discord.ui.Select):
                 "**+Rename**\nRenomme Le Salon Du Ticket"
             )
 
-        elif self.values[0] == "Utilitaires":
+        elif choice == "Utilitaires":
             embed.title = "Utilitaires"
             embed.description = (
                 "**+Avatar**\nAffiche L’Avatar D’Un Utilisateur\n\n"
@@ -557,7 +500,7 @@ class HelpSelect(discord.ui.Select):
                 "**+Say**\nFait Parler Le Bot"
             )
 
-        elif self.values[0] == "Moderation":
+        elif choice == "Moderation":
             embed.title = "Moderation"
             embed.description = (
                 "**+Kick**\nExpulse Un Membre\n\n"
@@ -572,7 +515,7 @@ class HelpSelect(discord.ui.Select):
                 "**+Unmute**\nRetire Le Mute"
             )
 
-        elif self.values[0] == "Owner":
+        elif choice == "Owner":
             embed.title = "Owner"
             embed.description = (
                 "**+Owner**\nAjoute Un Owner Bot\n\n"
@@ -584,12 +527,10 @@ class HelpSelect(discord.ui.Select):
 
         await interaction.response.edit_message(embed=embed, view=self.view)
 
-
 class HelpView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=60)
         self.add_item(HelpSelect())
-
 
 @bot.command()
 async def help(ctx):
@@ -597,7 +538,7 @@ async def help(ctx):
     embed = discord.Embed(
         title="Help Menu",
         description="Choisis Une Catégorie Dans Le Menu",
-        color=discord.Color.default()
+        color=discord.Color.dark_blue()
     )
 
     await ctx.send(embed=embed, view=HelpView())
