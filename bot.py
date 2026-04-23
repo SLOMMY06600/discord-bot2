@@ -682,6 +682,15 @@ class HelpView(discord.ui.View):
         super().__init__(timeout=60)
         self.add_item(HelpSelect())
 
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user.id not in owners and interaction.user.id != interaction.guild.owner_id:
+            await interaction.response.send_message(
+                f"{interaction.user.mention} ❌ Vous n'avez pas l'autorisation d'utiliser ce menu",
+                ephemeral=True
+            )
+            return False
+        return True
+
 @bot.command()
 async def help(ctx):
 
@@ -692,17 +701,6 @@ async def help(ctx):
     )
 
     await ctx.send(embed=embed, view=HelpView())
-
-class TicketView(discord.ui.View):
-
-    async def interaction_check(self, interaction: discord.Interaction):
-        if interaction.user.id not in owners and interaction.user.id != interaction.guild.owner_id:
-            await interaction.response.send_message(
-                "❌ Vous n'avez pas l'autorisation d'utiliser ce menu",
-                ephemeral=True
-            )
-            return False
-        return True
 
 # ======================
 # ANTI NUKE EVENTS
