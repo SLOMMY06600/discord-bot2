@@ -5,23 +5,21 @@ import io
 import json
 import os
 import aiohttp
-import asyncio
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-intents.guilds = True
 owners = []
 
 OWNERS_FILE = "owners.json"
 
 def load_owners():
-    try:
-        if os.path.exists(OWNERS_FILE):
-            with open(OWNERS_FILE, "r") as f:
-                return json.load(f)
-    except:
-        return []
+    if os.path.exists(OWNERS_FILE):
+        with open(OWNERS_FILE, "r") as f:
+            return json.load(f)
     return []
+
+def save_owners():
+    with open(OWNERS_FILE, "w") as f:
+        json.dump(owners, f)
+
+owners = load_owners()
 
 # ======================
 # INTENTS
@@ -38,9 +36,9 @@ bot = commands.Bot(command_prefix="+", intents=intents, help_command=None)
 # ======================
 
 ticket_options = [
-    {"name": "🛠Support", "category_id": None},
-    {"name": "Bug", "category_id": None},
-    {"name": "Autre", "category_id": None}
+    {"name": "🛠 Support", "category_id": None},
+    {"name": "🐞 Bug", "category_id": None},
+    {"name": "❓ Autre", "category_id": None}
 ]
 
 LOG_CHANNEL_ID = 1496568287415505069
@@ -75,17 +73,17 @@ async def create_transcript(channel):
 
 class TicketControls(discord.ui.View):
 
-    @discord.ui.button(label="Claim", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="📌 Claim", style=discord.ButtonStyle.primary)
     async def claim(self, interaction, button):
 
         await interaction.response.send_message(
-            f"Ticket pris par {interaction.user.mention}"
+            f"📌 Ticket pris par {interaction.user.mention}"
         )
 
-    @discord.ui.button(label="Fermer", style=discord.ButtonStyle.danger)
+    @discord.ui.button(label="🔒 Fermer", style=discord.ButtonStyle.danger)
     async def close(self, interaction, button):
 
-        await interaction.response.send_message("Fermeture...", ephemeral=True)
+        await interaction.response.send_message("🔒 Fermeture...", ephemeral=True)
 
         file = await create_transcript(interaction.channel)
 
@@ -442,6 +440,21 @@ async def botpic(ctx, url=None):
     except:
         await ctx.send("Erreur lors du changement d'avatar")
 
+@bot.command()
+async def say(ctx, *, message=None):
+    if not message:
+        return await ctx.send("Tu dois écrire un message !")
+
+    try:
+        await ctx.message.delete()
+    except:
+        pass
+
+    await ctx.send(message)
+
+@bot.event
+async def on_command_error(ctx, error):
+    print(error)
 
 # ======================
 # NEW COMMANDS
@@ -519,15 +532,6 @@ class HelpView(discord.ui.View):
         super().__init__(timeout=60)
         self.add_item(HelpSelect())
 
-    async def interaction_check(self, interaction: discord.Interaction):
-        if interaction.user.id not in owners and interaction.user.id != interaction.guild.owner_id:
-            await interaction.response.send_message(
-                f"{interaction.user.mention} Vous ne pouvez pas executer cette commande",
-                ephemeral=True
-            )
-            return False
-        return True
-
 @bot.command()
 async def help(ctx):
 
@@ -538,102 +542,6 @@ async def help(ctx):
     )
 
     await ctx.send(embed=embed, view=HelpView())
-
-@bot.command()
-async def userinfo(ctx, member: discord.Member = None):
-
-    member = member or ctx.author
-
-    embed = discord.Embed(
-        title=f"👤 Userinfo - {member}",
-        color=discord.Color.blue()
-    )
-
-    embed.set_thumbnail(url=member.display_avatar.url)
-
-    embed.add_field(name="ID", value=member.id, inline=True)
-    embed.add_field(name="Nom", value=str(member), inline=True)
-    embed.add_field(name="Compte créé", value=member.created_at.strftime("%d/%m/%Y"), inline=False)
-
-    if member.joined_at:
-        embed.add_field(name="A rejoint le serveur", value=member.joined_at.strftime("%d/%m/%Y"), inline=False)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def serverinfo(ctx):
-
-    guild = ctx.guild
-
-    embed = discord.Embed(
-        title=f"🖥️ Serverinfo - {guild.name}",
-        color=discord.Color.green()
-    )
-
-    if guild.icon:
-        embed.set_thumbnail(url=guild.icon.url)
-
-    embed.add_field(name="ID", value=guild.id, inline=True)
-    embed.add_field(name="Owner", value=str(guild.owner), inline=True)
-    embed.add_field(name="Membres", value=guild.member_count, inline=True)
-    embed.add_field(name="Rôles", value=len(guild.roles), inline=True)
-    embed.add_field(name="Channels", value=len(guild.channels), inline=True)
-    embed.add_field(name="Créé le", value=guild.created_at.strftime("%d/%m/%Y"), inline=False)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-@commands.has_permissions(manage_messages=True)
-async def say(ctx, *, message=None):
-
-    if message is None:
-        return await ctx.send("❌ Tu dois écrire un message")
-
-    try:
-        await ctx.message.delete()
-    except:
-        pass
-
-    await ctx.send(message)
-
-@bot.command()
-async def avatar(ctx, member: discord.Member = None):
-
-    member = member or ctx.author
-
-    embed = discord.Embed(
-        title=f"🖼️ Avatar de {member}",
-        color=discord.Color.purple()
-    )
-
-    embed.set_image(url=member.display_avatar.url)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def adduser(ctx, member: discord.Member):
-
-    if not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("Cette commande doit être utilisée dans un ticket")
-
-    try:
-        await ctx.channel.set_permissions(member, view_channel=True, send_messages=True)
-        await ctx.send(f"{member.mention} a été ajouté au ticket")
-    except:
-        await ctx.send("Impossible d'ajouter cet utilisateur")
-
-@bot.command()
-async def deluser(ctx, member: discord.Member):
-
-    if not ctx.channel.name.startswith("ticket-"):
-        return await ctx.send("Cette commande doit être utilisée dans un ticket")
-
-    try:
-        await ctx.channel.set_permissions(member, overwrite=None)
-        await ctx.send(f"{member.mention} a été retiré du ticket")
-    except:
-        await ctx.send("Impossible de retirer cet utilisateur")
-
 
 # ======================
 # RUN
