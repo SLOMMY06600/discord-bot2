@@ -51,6 +51,8 @@ LOG_CHANNEL_ID = 1496568287415505069
 async def on_ready():
     print(f"Connecté : {bot.user}")
 
+    bot.add_view(TicketView())  # 🔥 recharge les boutons après restart
+
 # ======================
 # TRANSCRIPT
 # ======================
@@ -155,7 +157,7 @@ class TicketMenu(discord.ui.Select):
 
 class TicketView(discord.ui.View):
     def __init__(self):
-        super().__init__()
+        super().__init__(timeout=None)  # 🔥 rend le menu permanent
         self.add_item(TicketMenu())
 
 # ======================
