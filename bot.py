@@ -8,6 +8,7 @@ import aiohttp
 owners = []
 
 OWNERS_FILE = "owners.json"
+ALLOWED_ROLES_FILE = "allowed_roles.json"
 
 def load_owners():
     if os.path.exists(OWNERS_FILE):
@@ -19,7 +20,18 @@ def save_owners():
     with open(OWNERS_FILE, "w") as f:
         json.dump(owners, f)
 
+def load_allowed_roles():
+    if os.path.exists(ALLOWED_ROLES_FILE):
+        with open(ALLOWED_ROLES_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_allowed_roles():
+    with open(ALLOWED_ROLES_FILE, "w") as f:
+        json.dump(allowed_roles, f)
+
 owners = load_owners()
+allowed_roles = load_allowed_roles()
 
 # ======================
 # INTENTS
@@ -291,9 +303,14 @@ async def clear(ctx, amount: int):
 
     await ctx.send(f"{len(deleted)-1} messages supprimés", delete_after=5)
 
+def has_allowed_role(ctx):
+    return any(role.id in allowed_roles for role in ctx.author.roles)
+
 @bot.command()
-@commands.has_permissions(manage_roles=True)
 async def addrole(ctx, member: discord.Member, role: discord.Role):
+
+    if not has_allowed_role(ctx):
+        return await ctx.send("❌ Tu n'as pas la permission d'utiliser cette commande")
 
     try:
         await member.add_roles(role)
@@ -303,8 +320,10 @@ async def addrole(ctx, member: discord.Member, role: discord.Role):
 
 
 @bot.command()
-@commands.has_permissions(manage_roles=True)
 async def delrole(ctx, member: discord.Member, role: discord.Role):
+
+    if not has_allowed_role(ctx):
+        return await ctx.send("❌ Tu n'as pas la permission d'utiliser cette commande")
 
     try:
         await member.remove_roles(role)
@@ -358,6 +377,50 @@ async def unmute(ctx, member: discord.Member):
 
     except discord.Forbidden:
         await ctx.send("Le bot n'a pas les permissions pour unmute cette personne")
+
+@bot.command()
+async def allowrole(ctx, role: discord.Role):
+
+    if ctx.author.id != ctx.guild.owner_id and ctx.author.id not in owners:
+        return await ctx.send("❌ Seul le owner du serveur ou un owner bot peut faire ça")
+
+    if role.id in allowed_roles:
+        return await ctx.send(f"Le rôle **{role.name}** a déjà accès aux commandes addrole/delrole")
+
+    allowed_roles.append(role.id)
+    save_allowed_roles()
+
+    await ctx.send(f"✅ Le rôle **{role.name}** peut maintenant utiliser addrole/delrole")
+
+@bot.command()
+async def disallowrole(ctx, role: discord.Role):
+
+    if ctx.author.id != ctx.guild.owner_id and ctx.author.id not in owners:
+        return await ctx.send("❌ Seul le owner du serveur ou un owner bot peut faire ça")
+
+    if role.id not in allowed_roles:
+        return await ctx.send(f"Le rôle **{role.name}** n'a pas accès aux commandes addrole/delrole")
+
+    allowed_roles.remove(role.id)
+    save_allowed_roles()
+
+    await ctx.send(f"✅ Le rôle **{role.name}** ne peut plus utiliser addrole/delrole")
+
+@bot.command()
+async def allowlist(ctx):
+
+    if not allowed_roles:
+        return await ctx.send("Aucun rôle autorisé pour addrole/delrole")
+
+    mentions = []
+    for role_id in allowed_roles:
+        role = ctx.guild.get_role(role_id)
+        if role:
+            mentions.append(role.mention)
+        else:
+            mentions.append(f"ID inconnu: {role_id}")
+
+    await ctx.send("**Rôles autorisés (addrole/delrole) :**\n" + "\n".join(mentions))
 
 @bot.command()
 async def owner(ctx, member: discord.Member):
@@ -525,8 +588,8 @@ class HelpSelect(discord.ui.Select):
                 "**+Ban**\nBannit Un Membre\n\n"
                 "**+Unban**\nDébannit Un Utilisateur\n\n"
                 "**+Clear**\nSupprime Des Messages\n\n"
-                "**+Addrole**\nAjoute Un Rôle\n\n"
-                "**+Delrole**\nRetire Un Rôle\n\n"
+                "**+Addrole @user @role**\nAjoute Un Rôle (rôles autorisés)\n\n"
+                "**+Delrole @user @role**\nRetire Un Rôle (rôles autorisés)\n\n"
                 "**+Lock**\nVerrouille Un Salon\n\n"
                 "**+Unlock**\nDéverrouille Un Salon\n\n"
                 "**+Mute**\nRend Muet Un Membre\n\n"
@@ -540,7 +603,10 @@ class HelpSelect(discord.ui.Select):
                 "**+Unowner**\nRetire Un Owner Bot\n\n"
                 "**+Ownerlist**\nListe Des Owners\n\n"
                 "**+Botname**\nChange Le Nom Du Bot\n\n"
-                "**+Botpic**\nChange L’Avatar Du Bot"
+                "**+Botpic**\nChange L’Avatar Du Bot\n\n"
+                "**+Allowrole @role**\nAutorise Un Rôle À Utiliser Addrole/Delrole\n\n"
+                "**+Disallowrole @role**\nRetire L’Autorisation D’Un Rôle\n\n"
+                "**+Allowlist**\nListe Des Rôles Autorisés"
             )
 
         await interaction.response.edit_message(embed=embed, view=self.view)
